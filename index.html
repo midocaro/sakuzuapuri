@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>作図アプリVer6.2</title>
+  <title>作図アプリVer6.3</title>
   <style>
     /* --- CSS START --- */
     
@@ -12,7 +12,6 @@
       margin: 0; padding: 0; font-family: Arial, sans-serif;
       display: flex; height: 100vh; height: 100dvh; 
       overflow: hidden; 
-      /* 操作不能回避のため、body全体の制限を緩和 */
       touch-action: none; 
     }
 
@@ -39,20 +38,33 @@
 
     /* === スクロールエリア（中央） === */
     #scrollable-section {
-      flex-grow: 1; /* 余ったスペースを埋める */
-      overflow-y: auto; /* ここだけスクロールする */
+      flex-grow: 1; 
+      overflow-y: auto; 
       padding: 15px;
       display: flex; flex-direction: column; gap: 15px;
       touch-action: pan-y; 
     }
 
-    /* === バナーエリア（下部固定） === */
+    /* === バナーエリア（黒背景・下部固定） === */
     #footer-banner {
       flex-shrink: 0;
-      padding: 10px; text-align: center; 
-      border-top: 1px solid #ddd; 
-      background-color: #fafafa;
+      padding: 15px 10px; 
+      text-align: center; 
+      background-color: #343a40; /* ダークグレー背景 */
+      color: #ffffff;
       z-index: 10002;
+      font-size: 12px;
+    }
+    #footer-banner a {
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      line-height: 1.4;
+    }
+    #footer-banner a:hover {
+      opacity: 0.8;
+      text-decoration: underline;
     }
 
     h3 {
@@ -185,7 +197,7 @@
       flex-grow: 1; 
       background-color: #e0e0e0; 
       position: relative; overflow: hidden; touch-action: none; 
-      cursor: crosshair; /* デフォルトカーソルを指定 */
+      cursor: crosshair; 
     }
 
     /* === 実際に変形（ズーム・移動）する中身 === */
@@ -489,8 +501,8 @@
     </div>
 
     <div id="footer-banner">
-        <a href="https://sites.google.com/view/k-system-lab/ホーム" target="_blank" style="color:#007bff; text-decoration:none; font-weight:bold; font-size:12px;">
-          🏠 K-System Lab<br>(ホーム) に戻る
+        <a href="https://sites.google.com/view/k-system-lab/ホーム" target="_blank">
+          K-System Lab | Educational Tools & System Solutions
         </a>
     </div>
 
@@ -521,13 +533,12 @@
     <input type="range" id="slider-x" class="view-slider" min="-2000" max="2000" value="0">
     <input type="range" id="slider-y" class="view-slider" min="-2000" max="2000" value="0">
   </div>
-
-  <script>
+<script>
     /* --- JS START --- */
     
     // ■■■ エラー検知機能（アプリが凍結した理由を画面に出す） ■■■
     window.onerror = function(msg, url, line) {
-       alert("【エラー発生】\n" + msg + "\n行番号: " + line + "\n\nこの画面が出たら、コードの貼り付けミスやブラウザの相性問題の可能性があります。");
+       alert("【エラー発生】\n" + msg + "\n行番号: " + line + "\n\nコードが途中で切れている可能性があります。「後半のコード」も貼り付けたか確認してください。");
        return false;
     };
     
@@ -1695,3 +1706,4 @@
 
 </body>
 </html>
+  
