@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="ja"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>作図アプリVer6.0</title> <style> /* --- CSS START --- */
+<html lang="ja"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <title>作図アプリVer6.1</title> <style> /* --- CSS START --- */
 
 /* === 全体のレイアウト === */
 body {
   margin: 0; padding: 0; font-family: Arial, sans-serif;
   display: flex; height: 100vh; height: 100dvh; 
-  overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none;
+  overflow: hidden; 
+  /* 操作不能回避のため、body全体の制限を緩和 */
+  touch-action: none; 
 }
 
 /* === 左側：操作パネル（全体枠） === */
@@ -19,7 +21,7 @@ body {
   z-index: 10001; 
 }
 
-/* === 固定エリア（スクロールしない） === */
+/* === 固定エリア（上部） === */
 #fixed-section {
   flex-shrink: 0; 
   padding: 15px 15px 10px 15px; 
@@ -30,13 +32,22 @@ body {
   display: flex; flex-direction: column; gap: 10px;
 }
 
-/* === スクロールエリア === */
+/* === スクロールエリア（中央） === */
 #scrollable-section {
-  flex-grow: 1; 
-  overflow-y: auto; 
+  flex-grow: 1; /* 余ったスペースを埋める */
+  overflow-y: auto; /* ここだけスクロールする */
   padding: 15px;
   display: flex; flex-direction: column; gap: 15px;
   touch-action: pan-y; 
+}
+
+/* === バナーエリア（下部固定） === */
+#footer-banner {
+  flex-shrink: 0;
+  padding: 10px; text-align: center; 
+  border-top: 1px solid #ddd; 
+  background-color: #fafafa;
+  z-index: 10002;
 }
 
 h3 {
@@ -169,6 +180,7 @@ input:checked + .slider:before { transform: translateX(24px); }
   flex-grow: 1; 
   background-color: #e0e0e0; 
   position: relative; overflow: hidden; touch-action: none; 
+  cursor: crosshair; /* デフォルトカーソルを指定 */
 }
 
 /* === 実際に変形（ズーム・移動）する中身 === */
@@ -317,8 +329,6 @@ input:checked + .slider:before { transform: translateX(24px); }
   .btn-group { flex-direction: column; }
 }
 
-
-
 /* --- CSS END --- */
 </style> </head> <body>
 
@@ -460,12 +470,12 @@ input:checked + .slider:before { transform: translateX(24px); }
 
   <div class="credit-line">Produced by Komatsu</div>
   
-  <div style="margin-top:20px; padding:10px; text-align:center; border-top:1px solid #eee; background-color:#fafafa;">
+</div>
+
+<div id="footer-banner">
     <a href="[https://sites.google.com/view/k-system-lab/ホーム](https://sites.google.com/view/k-system-lab/ホーム)" target="_blank" style="color:#007bff; text-decoration:none; font-weight:bold; font-size:12px;">
       🏠 K-System Lab<br>(ホーム) に戻る
     </a>
-  </div>
-
 </div>
 </div>
 
@@ -492,6 +502,12 @@ input:checked + .slider:before { transform: translateX(24px); }
 </div>
 
 <script> /* --- JS START --- */
+
+// ■■■ エラー検知機能（アプリが凍結した理由を画面に出す） ■■■
+window.onerror = function(msg, url, line) {
+   alert(&quot;【エラー発生】\n&quot; + msg + &quot;\n行番号: &quot; + line + &quot;\n\nこの画面が出たら、コードの貼り付けミスやブラウザの相性問題の可能性があります。&quot;);
+   return false;
+};
 
 const canvas = document.getElementById(&#39;main-canvas&#39;);
 const ctx = canvas.getContext(&#39;2d&#39;);
@@ -593,14 +609,18 @@ const labels = {
 };
 
 window.addEventListener(&#39;load&#39;, () =&gt; {
-    initCanvasSize(); saveState(); updateCompassUI(); 
-    initProtractor(); updateProtractorUI(); // 分度器初期化
-    addToolListeners(); setupImagePaste(); 
-    drawingArea.addEventListener(&#39;wheel&#39;, handleWheel, { passive: false });
-    window.addEventListener(&#39;resize&#39;, resizeCanvas);
-    
-    sliderX.addEventListener(&#39;input&#39;, handleSliderChange);
-    sliderY.addEventListener(&#39;input&#39;, handleSliderChange);
+    try {
+        initCanvasSize(); saveState(); updateCompassUI(); 
+        initProtractor(); updateProtractorUI(); 
+        addToolListeners(); setupImagePaste(); 
+        drawingArea.addEventListener(&#39;wheel&#39;, handleWheel, { passive: false });
+        window.addEventListener(&#39;resize&#39;, resizeCanvas);
+        
+        sliderX.addEventListener(&#39;input&#39;, handleSliderChange);
+        sliderY.addEventListener(&#39;input&#39;, handleSliderChange);
+    } catch(e) {
+        alert(&quot;起動時にエラーが発生しました: &quot; + e.message);
+    }
 });
  
 // ★分度器の描画（一度だけ実行）
@@ -1647,8 +1667,6 @@ function getExtendedLine(x1, y1, x2, y2) {
   if (pts.length &gt;= 2) return { x1: pts[0].x, y1: pts[0].y, x2: pts[pts.length-1].x, y2: pts[pts.length-1].y };
   return { x1: x1, y1: y1, x2: x2, y2: y2 }; 
 }
-
-
 
 /* --- JS END --- */
 </script>
