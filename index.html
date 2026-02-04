@@ -12,9 +12,20 @@
     /* === 全体のレイアウト === */
     body {
       margin: 0; padding: 0; font-family: Arial, sans-serif;
-      display: flex; height: 100vh; height: 100dvh; 
+      /* 修正：縦並びに変更してフッターを下に配置 */
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh; 
       overflow: hidden; 
       touch-action: none; 
+    }
+
+    /* 修正：アプリのメイン部分（操作盤＋キャンバス）を横並びにするラッパー */
+    #main-wrapper {
+      display: flex; 
+      flex-grow: 1; /* 残りの高さを全て使う */
+      overflow: hidden;
+      width: 100%;
+      position: relative;
     }
 
     /* === 左側：操作パネル === */
@@ -83,22 +94,18 @@
     #stop-button { background-color: #dc3545; }
     #reset-view-button { background-color: #6c757d; margin-bottom: 5px; }
 
-    /* 動点セットボタン */
     #set-moving-button { background-color: #28a745; display: none; margin-top: 5px; }
     #set-moving-button.is-active { background-color: #dc3545; }
       
-    /* 平行線セットボタン（新規） */
     #set-parallel-button { background-color: #17a2b8; display: none; margin-top: 5px; }
     #set-parallel-button.is-active { background-color: #dc3545; }
 
-    /* 動点用色塗りスイッチ */
     #moving-fill-container {
       display: none; align-items: center; justify-content: space-between;
       background: #fff; padding: 8px; border-radius: 6px; 
       border: 1px solid #ddd; margin-top: 5px;
     }
       
-    /* グラフ入力エリア */
     #graph-controls {
       display: none; 
       background: #e9ecef; padding: 8px; border-radius: 6px;
@@ -122,11 +129,9 @@
     #retry-button { background-color: #20c997; }
     #add-image-button { background-color: #28a745; color: white; width: 100%; }
 
-    /* ロックボタン */
     #lock-button { background-color: #6c757d; display: none; color: white; }
     #lock-button.is-locked { background-color: #dc3545; }
 
-    /* スイッチ */
     .mode-switch-container {
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px; background: #e2e6ea; border-radius: 6px; font-weight: bold; color: #333;
@@ -289,182 +294,184 @@
 
   <div id="overlay"></div>
 
-  <div id="controls">
-    <div id="fixed-section">
-      <div class="control-group">
-        <h3>操作</h3>
-        <div class="btn-group">
-          <button class="action-button" onclick="undoAction()">戻る</button>
-          <button class="action-button" onclick="redoAction()">進む</button>
-          <button class="action-button" id="reset-button" onclick="resetCanvas()">消去</button>
-        </div>
-      </div>
+  <div id="main-wrapper">
+      <div id="controls">
+        <div id="fixed-section">
+          <div class="control-group">
+            <h3>操作</h3>
+            <div class="btn-group">
+              <button class="action-button" onclick="undoAction()">戻る</button>
+              <button class="action-button" onclick="redoAction()">進む</button>
+              <button class="action-button" id="reset-button" onclick="resetCanvas()">消去</button>
+            </div>
+          </div>
 
-      <div class="control-group">
-        <h3>線の色</h3>
-        <div class="color-group">
-          <label class="color-label" style="color: black;"><input type="radio" name="color" value="black" onchange="setColor(this.value)" checked> 黒</label>
-          <label class="color-label" style="color: #dc3545;"><input type="radio" name="color" value="#dc3545" onchange="setColor(this.value)"> 赤</label>
-          <label class="color-label" style="color: #007bff;"><input type="radio" name="color" value="#007bff" onchange="setColor(this.value)"> 青</label>
-        </div>
-      </div>
-    </div>
-
-    <div id="scrollable-section">
-      <div class="control-group">
-        <div style="margin-bottom: 0;">
-          <button class="action-button" id="start-replay-button" onclick="startPlayback()">▶ 作図を再生</button>
-          <div id="playback-controls" style="display:none; gap:5px; display:flex;">
-             <button class="action-button" id="pause-button" onclick="togglePause()">⏸ 一時停止</button>
-             <button class="action-button" id="stop-button" onclick="stopPlayback()">⏹ 終了</button>
+          <div class="control-group">
+            <h3>線の色</h3>
+            <div class="color-group">
+              <label class="color-label" style="color: black;"><input type="radio" name="color" value="black" onchange="setColor(this.value)" checked> 黒</label>
+              <label class="color-label" style="color: #dc3545;"><input type="radio" name="color" value="#dc3545" onchange="setColor(this.value)"> 赤</label>
+              <label class="color-label" style="color: #007bff;"><input type="radio" name="color" value="#007bff" onchange="setColor(this.value)"> 青</label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="control-group">
-        <h3 class="section-title">ツール</h3>
-        <div class="radio-group">
-          <label class="radio-label" id="label-point"><input type="radio" name="tool" value="point" onchange="setTool(this.value)" checked><span>点</span></label>
-          <label class="radio-label" id="label-moving_point"><input type="radio" name="tool" value="moving_point" onchange="setTool(this.value)"><span>動点</span></label>
-          <label class="radio-label" id="label-line"><input type="radio" name="tool" value="line" onchange="setTool(this.value)"><span>点と点を結ぶ</span></label>
-          <label class="radio-label" id="label-ruler"><input type="radio" name="tool" value="ruler" onchange="setTool(this.value)"><span>直線（定規）</span></label>
-          <label class="radio-label" id="label-compass"><input type="radio" name="tool" value="compass" onchange="setTool(this.value)"><span>コンパス</span></label>
-          <label class="radio-label" id="label-protractor"><input type="radio" name="tool" value="protractor" onchange="setTool(this.value)"><span>分度器</span></label>
-          <label class="radio-label" id="label-parallel"><input type="radio" name="tool" value="parallel" onchange="setTool(this.value)"><span>平行線（三角定規）</span></label>
+        <div id="scrollable-section">
+          <div class="control-group">
+            <div style="margin-bottom: 0;">
+              <button class="action-button" id="start-replay-button" onclick="startPlayback()">▶ 作図を再生</button>
+              <div id="playback-controls" style="display:none; gap:5px; display:flex;">
+                 <button class="action-button" id="pause-button" onclick="togglePause()">⏸ 一時停止</button>
+                 <button class="action-button" id="stop-button" onclick="stopPlayback()">⏹ 終了</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3 class="section-title">ツール</h3>
+            <div class="radio-group">
+              <label class="radio-label" id="label-point"><input type="radio" name="tool" value="point" onchange="setTool(this.value)" checked><span>点</span></label>
+              <label class="radio-label" id="label-moving_point"><input type="radio" name="tool" value="moving_point" onchange="setTool(this.value)"><span>動点</span></label>
+              <label class="radio-label" id="label-line"><input type="radio" name="tool" value="line" onchange="setTool(this.value)"><span>点と点を結ぶ</span></label>
+              <label class="radio-label" id="label-ruler"><input type="radio" name="tool" value="ruler" onchange="setTool(this.value)"><span>直線（定規）</span></label>
+              <label class="radio-label" id="label-compass"><input type="radio" name="tool" value="compass" onchange="setTool(this.value)"><span>コンパス</span></label>
+              <label class="radio-label" id="label-protractor"><input type="radio" name="tool" value="protractor" onchange="setTool(this.value)"><span>分度器</span></label>
+              <label class="radio-label" id="label-parallel"><input type="radio" name="tool" value="parallel" onchange="setTool(this.value)"><span>平行線（三角定規）</span></label>
+                
+              <label class="radio-label" id="label-freehand"><input type="radio" name="tool" value="freehand" onchange="setTool(this.value)"><span>フリーハンド</span></label>
+              <label class="radio-label" id="label-eraser"><input type="radio" name="tool" value="eraser" onchange="setTool(this.value)"><span>消しゴム</span></label>
+            </div>
             
-          <label class="radio-label" id="label-freehand"><input type="radio" name="tool" value="freehand" onchange="setTool(this.value)"><span>フリーハンド</span></label>
-          <label class="radio-label" id="label-eraser"><input type="radio" name="tool" value="eraser" onchange="setTool(this.value)"><span>消しゴム</span></label>
-        </div>
-        
-        <button class="action-button" id="set-moving-button" onclick="toggleMovingSet()">セット（移動モードへ）</button>
-        <button class="action-button" id="set-parallel-button" onclick="toggleParallelSet()">セット（定規を固定）</button>
-        
-        <div id="moving-fill-container">
-          <span style="font-size: 13px; font-weight: bold; color: #555;">色を塗る</span>
-          <label class="switch" style="transform: scale(0.9);">
-            <input type="checkbox" id="moving-fill-toggle" onchange="toggleMovingFill()" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-        
-      <div class="control-group">
-        <button class="action-button" id="reset-view-button" onclick="resetView()">🔍 視点をリセット</button>
-      </div>
-
-      <div class="control-group" id="compass-controls" style="display:none;">
-        <h3 class="section-title">コンパス設定</h3>
-        <button class="action-button" id="lock-button" onclick="toggleCompassLock()">幅をロック</button>
-      </div>
-
-      <div class="control-group">
-        <div class="mode-switch-container">
-          <span>作図モード</span>
-          <label class="switch"><input type="checkbox" id="mode-toggle" onchange="toggleDrawingMode()"><span class="slider"></span></label>
-        </div>
-      </div>
-        
-      <div class="control-group">
-        <div class="mode-switch-container">
-          <span>方眼紙</span>
-          <label class="switch"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"><span class="slider"></span></label>
-        </div>
-      </div>
-        
-      <div class="control-group">
-        <div class="mode-switch-container">
-          <span>座標軸</span>
-          <label class="switch"><input type="checkbox" id="axis-toggle" onchange="toggleAxis()"><span class="slider"></span></label>
-        </div>
-        
-        <div id="graph-controls">
-          <div class="graph-label">y = ax³ + bx² + cx + d</div>
-          <div class="graph-input-row">
-            <input type="text" id="poly-a" value="0" placeholder="a" oninput="updatePolyPreview()">x³+
-            <input type="text" id="poly-b" value="0" placeholder="b" oninput="updatePolyPreview()">x²+
-            <input type="text" id="poly-c" value="0" placeholder="c" oninput="updatePolyPreview()">x+
-            <input type="text" id="poly-d" value="0" placeholder="d" oninput="updatePolyPreview()">
+            <button class="action-button" id="set-moving-button" onclick="toggleMovingSet()">セット（移動モードへ）</button>
+            <button class="action-button" id="set-parallel-button" onclick="toggleParallelSet()">セット（定規を固定）</button>
+            
+            <div id="moving-fill-container">
+              <span style="font-size: 13px; font-weight: bold; color: #555;">色を塗る</span>
+              <label class="switch" style="transform: scale(0.9);">
+                <input type="checkbox" id="moving-fill-toggle" onchange="toggleMovingFill()" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
-          <button class="action-button graph-add-btn" onclick="addPolyGraph()">グラフを追加</button>
-          <button class="action-button" onclick="clearGraphs()" style="background-color: #dc3545; font-size: 11px; padding: 6px; width:100%; margin-top:5px;">グラフを全消去</button>
+            
+          <div class="control-group">
+            <button class="action-button" id="reset-view-button" onclick="resetView()">🔍 視点をリセット</button>
+          </div>
+
+          <div class="control-group" id="compass-controls" style="display:none;">
+            <h3 class="section-title">コンパス設定</h3>
+            <button class="action-button" id="lock-button" onclick="toggleCompassLock()">幅をロック</button>
+          </div>
+
+          <div class="control-group">
+            <div class="mode-switch-container">
+              <span>作図モード</span>
+              <label class="switch"><input type="checkbox" id="mode-toggle" onchange="toggleDrawingMode()"><span class="slider"></span></label>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <div class="mode-switch-container">
+              <span>方眼紙</span>
+              <label class="switch"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"><span class="slider"></span></label>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <div class="mode-switch-container">
+              <span>座標軸</span>
+              <label class="switch"><input type="checkbox" id="axis-toggle" onchange="toggleAxis()"><span class="slider"></span></label>
+            </div>
+            
+            <div id="graph-controls">
+              <div class="graph-label">y = ax³ + bx² + cx + d</div>
+              <div class="graph-input-row">
+                <input type="text" id="poly-a" value="0" placeholder="a" oninput="updatePolyPreview()">x³+
+                <input type="text" id="poly-b" value="0" placeholder="b" oninput="updatePolyPreview()">x²+
+                <input type="text" id="poly-c" value="0" placeholder="c" oninput="updatePolyPreview()">x+
+                <input type="text" id="poly-d" value="0" placeholder="d" oninput="updatePolyPreview()">
+              </div>
+              <button class="action-button graph-add-btn" onclick="addPolyGraph()">グラフを追加</button>
+              <button class="action-button" onclick="clearGraphs()" style="background-color: #dc3545; font-size: 11px; padding: 6px; width:100%; margin-top:5px;">グラフを全消去</button>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <h3 class="section-title">画像挿入</h3>
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            <button class="action-button" id="add-image-button" onclick="document.getElementById('image-input').click()">画像を追加</button>
+          </div>
+            
+          <div class="control-group">
+            <h3 class="section-title" onclick="toggleSection('basic-practice-list', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+              基本作図の練習 <span>▼</span>
+            </h3>
+            <div id="basic-practice-list">
+              <div class="btn-group-vertical">
+                <button class="action-button practice-button" onclick="startPractice(1)">①線分の垂直二等分線</button>
+                <button class="action-button practice-button" onclick="startPractice(2)">②角の二等分線</button>
+                <button class="action-button practice-button" onclick="startPractice(3)">③直線上の点を通る垂線</button>
+                <button class="action-button practice-button" onclick="startPractice(4)">④直線上にない点を通る垂線</button>
+                <button class="action-button" id="random-button" onclick="startRandomPractice()">🎲 ランダム出題</button>
+              </div>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <h3 class="section-title" onclick="toggleSection('levelup-practice-list', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+              Lvアップ作図練習 <span>▼</span>
+            </h3>
+            <div id="levelup-practice-list">
+              <div class="btn-group-vertical">
+                <button class="action-button levelup-button" onclick="startLevelUpBisector()">①線分の垂直二等分線</button>
+                <button class="action-button levelup-button" onclick="startLevelUpAngleBisector()">②角の二等分線</button>
+                <button class="action-button levelup-button" onclick="startLevelUpPerpOnLine()">③直線上を通る垂線</button>
+                <button class="action-button levelup-button" onclick="startLevelUpPerpOffLine()">④直線上にない点を通る垂線</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group" id="problem-controls" style="display:none;">
+             <h3 class="section-title">課題コントロール</h3>
+             <div class="btn-group">
+                <button class="action-button" id="retry-button" onclick="retryProblem()">🔄 もう一度</button>
+                <button class="action-button" id="answer-button" onclick="showAnswer()" style="display:none;">💡 模範解答</button>
+             </div>
+          </div>
+
+          <div class="credit-line">Produced by Komatsu</div>
         </div>
       </div>
-        
-      <div class="control-group">
-        <h3 class="section-title">画像挿入</h3>
-        <input type="file" id="image-input" accept="image/*" style="display: none;">
-        <button class="action-button" id="add-image-button" onclick="document.getElementById('image-input').click()">画像を追加</button>
-      </div>
-        
-      <div class="control-group">
-        <h3 class="section-title" onclick="toggleSection('basic-practice-list', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-          基本作図の練習 <span>▼</span>
-        </h3>
-        <div id="basic-practice-list">
-          <div class="btn-group-vertical">
-            <button class="action-button practice-button" onclick="startPractice(1)">①線分の垂直二等分線</button>
-            <button class="action-button practice-button" onclick="startPractice(2)">②角の二等分線</button>
-            <button class="action-button practice-button" onclick="startPractice(3)">③直線上の点を通る垂線</button>
-            <button class="action-button practice-button" onclick="startPractice(4)">④直線上にない点を通る垂線</button>
-            <button class="action-button" id="random-button" onclick="startRandomPractice()">🎲 ランダム出題</button>
+
+      <div id="drawing-area">
+        <div id="canvas-content">
+          <canvas id="axis-canvas"></canvas>
+          <canvas id="main-canvas"></canvas>
+          <canvas id="overlay-canvas"></canvas>
+          
+          <div id="parallelToolContainer">
+            <canvas id="parallelCanvas"></canvas>
+            <div id="parallelRotateHandle" title="回転">🔃</div>
+            <div id="parallelPencil" title="ドラッグして直線を引く">✏️</div>
+          </div>
+            
+          <div id="compassContainer">
+            <div id="compassPivot"></div>
+            <div id="compassArm"><div id="pencilTip" title="ドラッグして幅を変える"></div></div>
+            <div id="pencilDrawHandle" title="ドラッグして円を描く">✏️</div>
+          </div>
+            
+          <div id="protractorContainer">
+            <div id="protractorBody">
+               <canvas id="protractorCanvas" width="340" height="170"></canvas>
+               <div id="protractorRotateHandle">🔃</div>
+            </div>
           </div>
         </div>
+          
+        <input type="range" id="slider-x" class="view-slider" min="-2000" max="2000" value="0">
+        <input type="range" id="slider-y" class="view-slider" min="-2000" max="2000" value="0">
       </div>
-        
-      <div class="control-group">
-        <h3 class="section-title" onclick="toggleSection('levelup-practice-list', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-          Lvアップ作図練習 <span>▼</span>
-        </h3>
-        <div id="levelup-practice-list">
-          <div class="btn-group-vertical">
-            <button class="action-button levelup-button" onclick="startLevelUpBisector()">①線分の垂直二等分線</button>
-            <button class="action-button levelup-button" onclick="startLevelUpAngleBisector()">②角の二等分線</button>
-            <button class="action-button levelup-button" onclick="startLevelUpPerpOnLine()">③直線上を通る垂線</button>
-            <button class="action-button levelup-button" onclick="startLevelUpPerpOffLine()">④直線上にない点を通る垂線</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="control-group" id="problem-controls" style="display:none;">
-         <h3 class="section-title">課題コントロール</h3>
-         <div class="btn-group">
-            <button class="action-button" id="retry-button" onclick="retryProblem()">🔄 もう一度</button>
-            <button class="action-button" id="answer-button" onclick="showAnswer()" style="display:none;">💡 模範解答</button>
-         </div>
-      </div>
-
-      <div class="credit-line">Produced by Komatsu</div>
-    </div>
-  </div>
-
-  <div id="drawing-area">
-    <div id="canvas-content">
-      <canvas id="axis-canvas"></canvas>
-      <canvas id="main-canvas"></canvas>
-      <canvas id="overlay-canvas"></canvas>
-      
-      <div id="parallelToolContainer">
-        <canvas id="parallelCanvas"></canvas>
-        <div id="parallelRotateHandle" title="回転">🔃</div>
-        <div id="parallelPencil" title="ドラッグして直線を引く">✏️</div>
-      </div>
-        
-      <div id="compassContainer">
-        <div id="compassPivot"></div>
-        <div id="compassArm"><div id="pencilTip" title="ドラッグして幅を変える"></div></div>
-        <div id="pencilDrawHandle" title="ドラッグして円を描く">✏️</div>
-      </div>
-        
-      <div id="protractorContainer">
-        <div id="protractorBody">
-           <canvas id="protractorCanvas" width="340" height="170"></canvas>
-           <div id="protractorRotateHandle">🔃</div>
-        </div>
-      </div>
-    </div>
-      
-    <input type="range" id="slider-x" class="view-slider" min="-2000" max="2000" value="0">
-    <input type="range" id="slider-y" class="view-slider" min="-2000" max="2000" value="0">
   </div>
 
   <script>
@@ -572,7 +579,7 @@
       ruler: document.getElementById('label-ruler'),
       compass: document.getElementById('label-compass'),
       protractor: document.getElementById('label-protractor'), 
-      parallel: document.getElementById('label-parallel'), // ★
+      parallel: document.getElementById('label-parallel'),
       freehand: document.getElementById('label-freehand'),
       eraser: document.getElementById('label-eraser')
     };
@@ -745,18 +752,11 @@
              const ux = Math.cos(guideAngle);
              const uy = Math.sin(guideAngle);
              
-             // 現在のマウス位置と、ドラッグ開始時の定規基準点との差分ベクトル
-             // 正確には、「定規のライン上」に投影する必要があるが、
-             // 簡易的に「前回の位置からの移動量をガイドベクトルに射影」する
-             
              // ターゲット位置（本来行きたい場所）
              const targetX = pos.x - parallelTool.offsetX;
              const targetY = pos.y - parallelTool.offsetY;
              
-             // 基準点（ロックした瞬間の位置がベストだが、ここでは現在の位置からの変位で計算）
-             // 任意の点Pから、ガイドライン（点(x,y), 方向(ux,uy)）への垂線の足を求める
-             // 投影点 Q = P + t*u
-             // ここではシンプルに、移動ベクトル(dx, dy)と単位ベクトルuの内積をとる
+             // 投影計算
              const dx = targetX - parallelTool.x;
              const dy = targetY - parallelTool.y;
              const dot = dx * ux + dy * uy;
@@ -1214,7 +1214,1229 @@
     /* --- JS END --- */
   </script>
 
-  <footer style="margin-top:50px; padding:20px; text-align:center; border-top:1px solid #eee; background-color:#fafafa;">
+  <footer style="padding: 5px; text-align:center; border-top:1px solid #eee; background-color:#fafafa; font-size: 12px; flex-shrink: 0;">
+     <a href="https://sites.google.com/view/k-system-lab/ホーム" target="_blank" style="color:#007bff; text-decoration:none; font-weight:bold;">
+       🏠 K-System Lab (ホーム) に戻る
+     </a>
+  </footer>
+</body>
+</html><!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>作図アプリVer6.4 - 平行線ツール搭載</title>
+  <style>
+    /* --- CSS START --- */
+    
+    
+    
+    /* === 全体のレイアウト === */
+    body {
+      margin: 0; padding: 0; font-family: Arial, sans-serif;
+      /* 修正：縦並びに変更してフッターを下に配置 */
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh; 
+      overflow: hidden; 
+      touch-action: none; 
+    }
+
+    /* 修正：アプリのメイン部分（操作盤＋キャンバス）を横並びにするラッパー */
+    #main-wrapper {
+      display: flex; 
+      flex-grow: 1; /* 残りの高さを全て使う */
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
+
+    /* === 左側：操作パネル === */
+    #controls {
+      width: 260px; background-color: #f8f9fa; 
+      padding: 0;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1); 
+      overflow: hidden; 
+      flex-shrink: 0; display: flex; flex-direction: column; 
+      z-index: 10001; 
+    }
+
+    #fixed-section {
+      flex-shrink: 0; 
+      padding: 15px 15px 10px 15px; 
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #ddd; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      z-index: 10002;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    #scrollable-section {
+      flex-grow: 1; 
+      overflow-y: auto; 
+      padding: 15px;
+      display: flex; flex-direction: column; gap: 15px;
+      touch-action: pan-y; 
+    }
+
+    h3 {
+      margin: 0 0 5px 0; font-size: 14px; color: #555; 
+      font-weight: bold;
+    }
+      
+    .section-title {
+      font-size: 16px; color: #333; margin: 0 0 10px 0;
+      border-bottom: 2px solid #ddd; padding-bottom: 5px;
+    }
+
+    /* ラジオボタン */
+    .radio-group { display: flex; flex-direction: column; gap: 10px; }
+    .radio-label {
+      display: flex; align-items: center; cursor: pointer; padding: 8px;
+      background: white; border-radius: 6px; border: 1px solid #ddd;
+      transition: background 0.2s;
+    }
+    .radio-label:hover { background: #e9ecef; }
+    .radio-label input { margin-right: 10px; transform: scale(1.2); }
+
+    /* ボタン */
+    .btn-group { display: flex; gap: 10px; }
+    .btn-group-vertical { display: flex; flex-direction: column; gap: 8px; }
+
+    .action-button {
+      flex: 1; padding: 12px; border: none; background-color: #007bff;
+      color: white; font-weight: bold; border-radius: 6px; cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: background-color 0.2s;
+      font-size: 14px; 
+    }
+    .action-button:active { transform: translateY(2px); box-shadow: none; }
+    #reset-button { background-color: #dc3545; }
+      
+    #start-replay-button { background-color: #6f42c1; width: 100%; }
+    #pause-button { background-color: #ffc107; color: black; }
+    #stop-button { background-color: #dc3545; }
+    #reset-view-button { background-color: #6c757d; margin-bottom: 5px; }
+
+    #set-moving-button { background-color: #28a745; display: none; margin-top: 5px; }
+    #set-moving-button.is-active { background-color: #dc3545; }
+      
+    #set-parallel-button { background-color: #17a2b8; display: none; margin-top: 5px; }
+    #set-parallel-button.is-active { background-color: #dc3545; }
+
+    #moving-fill-container {
+      display: none; align-items: center; justify-content: space-between;
+      background: #fff; padding: 8px; border-radius: 6px; 
+      border: 1px solid #ddd; margin-top: 5px;
+    }
+      
+    #graph-controls {
+      display: none; 
+      background: #e9ecef; padding: 8px; border-radius: 6px;
+      flex-direction: column; gap: 6px;
+    }
+    .graph-label { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 2px; }
+    .graph-input-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 1px;
+      font-size: 10px; font-weight: bold; white-space: nowrap;
+    }
+    .graph-input-row input {
+      width: 24px; padding: 3px 1px; text-align: center; border: 1px solid #ccc; border-radius: 3px;
+      font-size: 11px;
+    }
+    .graph-add-btn { padding: 4px 0; font-size: 12px; width: 100%; margin-top: 5px; }
+
+    .practice-button { background-color: #17a2b8; text-align: left; padding-left: 15px; }
+    .levelup-button { background-color: #fd7e14; text-align: left; padding-left: 15px; }
+    #random-button { background-color: #ff9800; text-align: center; font-size: 16px; }
+    #answer-button { background-color: #e83e8c; text-align: center; margin-top: 5px; }
+    #retry-button { background-color: #20c997; }
+    #add-image-button { background-color: #28a745; color: white; width: 100%; }
+
+    #lock-button { background-color: #6c757d; display: none; color: white; }
+    #lock-button.is-locked { background-color: #dc3545; }
+
+    .mode-switch-container {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px; background: #e2e6ea; border-radius: 6px; font-weight: bold; color: #333;
+    }
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: .4s; border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
+      background-color: white; transition: .4s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #28a745; }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    .color-group { display: flex; gap: 5px; }
+    .color-label {
+      flex: 1; display: flex; justify-content: center; align-items: center;
+      padding: 8px; cursor: pointer; background: white;
+      border-radius: 6px; border: 1px solid #ddd; font-weight: bold;
+    }
+    .color-label:hover { background: #e9ecef; }
+    .color-label input { margin-right: 5px; transform: scale(1.2); }
+
+    .credit-line { margin-top: 20px; text-align: center; font-size: 12px; color: #888; font-weight: bold; }
+
+    #overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0); z-index: 10000; display: none; cursor: wait;
+    }
+
+    /* === 右側：描画エリア枠 === */
+    #drawing-area {
+      flex-grow: 1; background-color: #e0e0e0; 
+      position: relative; overflow: hidden; touch-action: none; cursor: crosshair; 
+    }
+
+    #canvas-content {
+      position: absolute; top: 0; left: 0; transform-origin: 0 0;
+      background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+    }
+      
+    .grid-background {
+      background-image: linear-gradient(#e0e0e0 1px, transparent 1px), linear-gradient(90deg, #e0e0e0 1px, transparent 1px);
+      background-size: 25px 25px;
+    }
+
+    canvas { position: absolute; top: 0; left: 0; }
+    #main-canvas { z-index: 10; }
+    #axis-canvas { z-index: 5; pointer-events: none; display: none; }
+    #overlay-canvas { z-index: 15; pointer-events: none; }
+    
+    /* === 平行線ツールUI === */
+    #parallelToolContainer {
+       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+       pointer-events: none; display: none; z-index: 85; 
+    }
+    #parallelCanvas {
+       width: 100%; height: 100%; display: block; pointer-events: auto;
+    }
+    #parallelRotateHandle {
+       position: absolute; width: 30px; height: 30px; 
+       background: white; border: 1px solid #333; border-radius: 50%;
+       display: flex; justify-content: center; align-items: center;
+       cursor: grabbing; pointer-events: auto; z-index: 90;
+       font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    #parallelPencil {
+       position: absolute; width: 32px; height: 32px; 
+       background: #007bff; border: 2px solid white; border-radius: 50%;
+       display: flex; justify-content: center; align-items: center;
+       color: white; font-size: 18px; cursor: crosshair; pointer-events: auto; z-index: 92;
+       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    #parallelPencil:active { transform: scale(0.95); }
+
+    /* === コンパスUI === */
+    #compassContainer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; display: none; z-index: 100;
+    }
+    #compassPivot {
+      position: absolute; width: 10px; height: 10px; 
+      background: rgba(220, 53, 69, 0.7); border: 1px solid white; border-radius: 50%; z-index: 110; 
+      cursor: crosshair; pointer-events: auto; transform: translate(-50%, -50%); 
+      box-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
+    #compassArm {
+      position: absolute; height: 2px; background: rgba(100, 100, 100, 0.5);
+      transform-origin: left center; z-index: 95; pointer-events: none; border-radius: 2px;
+    }
+    #pencilTip {
+      position: absolute; width: 26px; height: 26px; background: #007bff; 
+      border: 2px solid white; border-radius: 50%; right: 25px; top: -12px;        
+      pointer-events: auto; cursor: ew-resize; z-index: 130;        
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4); transition: background-color 0.2s;
+      display: flex; justify-content: center; align-items: center;
+      color: white; font-weight: bold; font-size: 16px; line-height: 1;
+    }
+    #pencilTip.locked { background: #dc3545; cursor: move; }
+    #pencilDrawHandle {
+      position: absolute; width: 40px; height: 40px; line-height: 40px;
+      text-align: center; font-size: 24px; z-index: 120;
+      pointer-events: auto; cursor: grabbing; background: white;
+      border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: transform 0.1s;
+    }
+      
+    /* === 分度器UI === */
+    #protractorContainer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; display: none; z-index: 90;
+    }
+    #protractorBody {
+      position: absolute; width: 340px; height: 170px; z-index: 91; pointer-events: auto; cursor: move;
+      transform-origin: 50% 100%; 
+    }
+    #protractorRotateHandle {
+      position: absolute; right: -20px; bottom: -20px; width: 40px; height: 40px;
+      background: white; border-radius: 50%; border: 1px solid #ccc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 95;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 20px; cursor: grabbing; pointer-events: auto;
+    }
+      
+    /* === スライダー === */
+    .view-slider {
+      position: absolute; z-index: 2000; opacity: 0.6; transition: opacity 0.2s; touch-action: pan-x pan-y; 
+    }
+    .view-slider:hover, .view-slider:active { opacity: 1.0; }
+    #slider-x { bottom: 60px; left: 50px; right: 50px; height: 20px; width: auto; }
+    #slider-y {
+      top: 50%; right: -100px; width: 250px; height: 20px;
+      transform: rotate(90deg) translate(0, -50%); transform-origin: center;
+    }
+      
+    @media (max-width: 600px) {
+      #slider-x { left: 10px; right: 10px; bottom: 65px; }
+      #slider-y { right: -110px; width: 250px; }
+      #controls { width: 60px; padding: 0; }
+      #fixed-section, #scrollable-section { padding: 5px; }
+      h3, .radio-label span { display: none; }
+      .radio-label { justify-content: center; }
+      .radio-label input { margin: 0; transform: scale(1.5); }
+      .btn-group { flex-direction: column; }
+    }
+    @media (min-width: 601px) and (max-width: 1024px) {
+      #controls { width: 200px; padding: 0; }
+      #fixed-section, #scrollable-section { padding: 10px; }
+      h3 { font-size: 15px; }
+    }
+    
+    
+    
+    /* --- CSS END --- */
+  </style>
+</head>
+<body>
+
+  <div id="overlay"></div>
+
+  <div id="main-wrapper">
+      <div id="controls">
+        <div id="fixed-section">
+          <div class="control-group">
+            <h3>操作</h3>
+            <div class="btn-group">
+              <button class="action-button" onclick="undoAction()">戻る</button>
+              <button class="action-button" onclick="redoAction()">進む</button>
+              <button class="action-button" id="reset-button" onclick="resetCanvas()">消去</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3>線の色</h3>
+            <div class="color-group">
+              <label class="color-label" style="color: black;"><input type="radio" name="color" value="black" onchange="setColor(this.value)" checked> 黒</label>
+              <label class="color-label" style="color: #dc3545;"><input type="radio" name="color" value="#dc3545" onchange="setColor(this.value)"> 赤</label>
+              <label class="color-label" style="color: #007bff;"><input type="radio" name="color" value="#007bff" onchange="setColor(this.value)"> 青</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="scrollable-section">
+          <div class="control-group">
+            <div style="margin-bottom: 0;">
+              <button class="action-button" id="start-replay-button" onclick="startPlayback()">▶ 作図を再生</button>
+              <div id="playback-controls" style="display:none; gap:5px; display:flex;">
+                 <button class="action-button" id="pause-button" onclick="togglePause()">⏸ 一時停止</button>
+                 <button class="action-button" id="stop-button" onclick="stopPlayback()">⏹ 終了</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h3 class="section-title">ツール</h3>
+            <div class="radio-group">
+              <label class="radio-label" id="label-point"><input type="radio" name="tool" value="point" onchange="setTool(this.value)" checked><span>点</span></label>
+              <label class="radio-label" id="label-moving_point"><input type="radio" name="tool" value="moving_point" onchange="setTool(this.value)"><span>動点</span></label>
+              <label class="radio-label" id="label-line"><input type="radio" name="tool" value="line" onchange="setTool(this.value)"><span>点と点を結ぶ</span></label>
+              <label class="radio-label" id="label-ruler"><input type="radio" name="tool" value="ruler" onchange="setTool(this.value)"><span>直線（定規）</span></label>
+              <label class="radio-label" id="label-compass"><input type="radio" name="tool" value="compass" onchange="setTool(this.value)"><span>コンパス</span></label>
+              <label class="radio-label" id="label-protractor"><input type="radio" name="tool" value="protractor" onchange="setTool(this.value)"><span>分度器</span></label>
+              <label class="radio-label" id="label-parallel"><input type="radio" name="tool" value="parallel" onchange="setTool(this.value)"><span>平行線（三角定規）</span></label>
+                
+              <label class="radio-label" id="label-freehand"><input type="radio" name="tool" value="freehand" onchange="setTool(this.value)"><span>フリーハンド</span></label>
+              <label class="radio-label" id="label-eraser"><input type="radio" name="tool" value="eraser" onchange="setTool(this.value)"><span>消しゴム</span></label>
+            </div>
+            
+            <button class="action-button" id="set-moving-button" onclick="toggleMovingSet()">セット（移動モードへ）</button>
+            <button class="action-button" id="set-parallel-button" onclick="toggleParallelSet()">セット（定規を固定）</button>
+            
+            <div id="moving-fill-container">
+              <span style="font-size: 13px; font-weight: bold; color: #555;">色を塗る</span>
+              <label class="switch" style="transform: scale(0.9);">
+                <input type="checkbox" id="moving-fill-toggle" onchange="toggleMovingFill()" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <button class="action-button" id="reset-view-button" onclick="resetView()">🔍 視点をリセット</button>
+          </div>
+
+          <div class="control-group" id="compass-controls" style="display:none;">
+            <h3 class="section-title">コンパス設定</h3>
+            <button class="action-button" id="lock-button" onclick="toggleCompassLock()">幅をロック</button>
+          </div>
+
+          <div class="control-group">
+            <div class="mode-switch-container">
+              <span>作図モード</span>
+              <label class="switch"><input type="checkbox" id="mode-toggle" onchange="toggleDrawingMode()"><span class="slider"></span></label>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <div class="mode-switch-container">
+              <span>方眼紙</span>
+              <label class="switch"><input type="checkbox" id="grid-toggle" onchange="toggleGrid()"><span class="slider"></span></label>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <div class="mode-switch-container">
+              <span>座標軸</span>
+              <label class="switch"><input type="checkbox" id="axis-toggle" onchange="toggleAxis()"><span class="slider"></span></label>
+            </div>
+            
+            <div id="graph-controls">
+              <div class="graph-label">y = ax³ + bx² + cx + d</div>
+              <div class="graph-input-row">
+                <input type="text" id="poly-a" value="0" placeholder="a" oninput="updatePolyPreview()">x³+
+                <input type="text" id="poly-b" value="0" placeholder="b" oninput="updatePolyPreview()">x²+
+                <input type="text" id="poly-c" value="0" placeholder="c" oninput="updatePolyPreview()">x+
+                <input type="text" id="poly-d" value="0" placeholder="d" oninput="updatePolyPreview()">
+              </div>
+              <button class="action-button graph-add-btn" onclick="addPolyGraph()">グラフを追加</button>
+              <button class="action-button" onclick="clearGraphs()" style="background-color: #dc3545; font-size: 11px; padding: 6px; width:100%; margin-top:5px;">グラフを全消去</button>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <h3 class="section-title">画像挿入</h3>
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            <button class="action-button" id="add-image-button" onclick="document.getElementById('image-input').click()">画像を追加</button>
+          </div>
+            
+          <div class="control-group">
+            <h3 class="section-title" onclick="toggleSection('basic-practice-list', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+              基本作図の練習 <span>▼</span>
+            </h3>
+            <div id="basic-practice-list">
+              <div class="btn-group-vertical">
+                <button class="action-button practice-button" onclick="startPractice(1)">①線分の垂直二等分線</button>
+                <button class="action-button practice-button" onclick="startPractice(2)">②角の二等分線</button>
+                <button class="action-button practice-button" onclick="startPractice(3)">③直線上の点を通る垂線</button>
+                <button class="action-button practice-button" onclick="startPractice(4)">④直線上にない点を通る垂線</button>
+                <button class="action-button" id="random-button" onclick="startRandomPractice()">🎲 ランダム出題</button>
+              </div>
+            </div>
+          </div>
+            
+          <div class="control-group">
+            <h3 class="section-title" onclick="toggleSection('levelup-practice-list', this)" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+              Lvアップ作図練習 <span>▼</span>
+            </h3>
+            <div id="levelup-practice-list">
+              <div class="btn-group-vertical">
+                <button class="action-button levelup-button" onclick="startLevelUpBisector()">①線分の垂直二等分線</button>
+                <button class="action-button levelup-button" onclick="startLevelUpAngleBisector()">②角の二等分線</button>
+                <button class="action-button levelup-button" onclick="startLevelUpPerpOnLine()">③直線上を通る垂線</button>
+                <button class="action-button levelup-button" onclick="startLevelUpPerpOffLine()">④直線上にない点を通る垂線</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group" id="problem-controls" style="display:none;">
+             <h3 class="section-title">課題コントロール</h3>
+             <div class="btn-group">
+                <button class="action-button" id="retry-button" onclick="retryProblem()">🔄 もう一度</button>
+                <button class="action-button" id="answer-button" onclick="showAnswer()" style="display:none;">💡 模範解答</button>
+             </div>
+          </div>
+
+          <div class="credit-line">Produced by Komatsu</div>
+        </div>
+      </div>
+
+      <div id="drawing-area">
+        <div id="canvas-content">
+          <canvas id="axis-canvas"></canvas>
+          <canvas id="main-canvas"></canvas>
+          <canvas id="overlay-canvas"></canvas>
+          
+          <div id="parallelToolContainer">
+            <canvas id="parallelCanvas"></canvas>
+            <div id="parallelRotateHandle" title="回転">🔃</div>
+            <div id="parallelPencil" title="ドラッグして直線を引く">✏️</div>
+          </div>
+            
+          <div id="compassContainer">
+            <div id="compassPivot"></div>
+            <div id="compassArm"><div id="pencilTip" title="ドラッグして幅を変える"></div></div>
+            <div id="pencilDrawHandle" title="ドラッグして円を描く">✏️</div>
+          </div>
+            
+          <div id="protractorContainer">
+            <div id="protractorBody">
+               <canvas id="protractorCanvas" width="340" height="170"></canvas>
+               <div id="protractorRotateHandle">🔃</div>
+            </div>
+          </div>
+        </div>
+          
+        <input type="range" id="slider-x" class="view-slider" min="-2000" max="2000" value="0">
+        <input type="range" id="slider-y" class="view-slider" min="-2000" max="2000" value="0">
+      </div>
+  </div>
+
+  <script>
+    /* --- JS START --- */
+    
+    
+    
+    window.onerror = function(msg, url, line) {
+       alert("【エラー発生】\n" + msg + "\n行番号: " + line); return false;
+    };
+    
+    const canvas = document.getElementById('main-canvas');
+    const ctx = canvas.getContext('2d');
+    const axisCanvas = document.getElementById('axis-canvas');
+    const axisCtx = axisCanvas.getContext('2d');
+    const overlayCanvas = document.getElementById('overlay-canvas');
+    const overlayCtx = overlayCanvas.getContext('2d');
+      
+    const drawingArea = document.getElementById('drawing-area');
+    const canvasContent = document.getElementById('canvas-content');
+    const imageInput = document.getElementById('image-input');
+    const overlay = document.getElementById('overlay');
+    const sliderX = document.getElementById('slider-x');
+    const sliderY = document.getElementById('slider-y');
+
+    let view = { scale: 1, x: 0, y: 0 };
+    let isPanning = false;
+    let startPan = { x: 0, y: 0 };
+    let initialPinchDist = 0;
+    let initialScale = 1;
+      
+    let currentTool = 'point';
+    let currentColor = 'black'; 
+    let isDrawing = false;
+    let lineStartPoint = null; 
+    let history = []; 
+    let redoStack = [];
+    let currentProblem = null; 
+      
+    let movingPoints = []; 
+    let isMovingPointSet = false; 
+    let dragMovingPointIndex = -1; 
+    let isMovingFillMode = true;
+      
+    // グラフ
+    let activeGraphs = [];
+    let previewGraph = null; 
+    const graphColors = ['#007bff', '#28a745', '#fd7e14', '#6610f2', '#e83e8c'];
+
+    // 再生
+    let playbackTimer = null;
+    let playbackStep = 0;
+    let isPaused = false;
+
+    // コンパス
+    let compass = { isDragging: false, dragTarget: null, pivotX: 200, pivotY: 200, radius: 100, angle: 0, locked: false, centerDrawn: false };
+    // 分度器
+    let protractor = { isDragging: false, dragTarget: null, x: 300, y: 300, angle: 0, width: 340, height: 170 };
+
+    // ★平行線ツール（三角定規）
+    let parallelTool = {
+      state: 'free', // 'free' or 'locked'
+      isDragging: false, dragTarget: null,
+      x: 300, y: 300, // 三角定規の直角位置
+      angle: 0, // 傾き
+      width: 200, height: 346 // 1:2:√3 の三角定規比率想定
+    };
+
+    // UI Elements
+    const compassContainer = document.getElementById('compassContainer');
+    const compassPivot = document.getElementById('compassPivot');
+    const compassArm = document.getElementById('compassArm');
+    const pencilDrawHandle = document.getElementById('pencilDrawHandle');
+    const pencilTip = document.getElementById('pencilTip');
+    const lockButton = document.getElementById('lock-button');
+    const compassControls = document.getElementById('compass-controls');
+      
+    const protractorContainer = document.getElementById('protractorContainer');
+    const protractorBody = document.getElementById('protractorBody');
+    const protractorCanvas = document.getElementById('protractorCanvas');
+    const protractorRotateHandle = document.getElementById('protractorRotateHandle');
+    
+    // 平行線ツールエレメント
+    const parallelToolContainer = document.getElementById('parallelToolContainer');
+    const parallelCanvas = document.getElementById('parallelCanvas');
+    const parallelRotateHandle = document.getElementById('parallelRotateHandle');
+    const parallelPencil = document.getElementById('parallelPencil');
+    const setParallelButton = document.getElementById('set-parallel-button');
+
+    const problemControls = document.getElementById('problem-controls');
+    const answerButton = document.getElementById('answer-button');
+    const retryButton = document.getElementById('retry-button');
+    const setMovingButton = document.getElementById('set-moving-button');
+    const movingFillContainer = document.getElementById('moving-fill-container');
+    const graphControls = document.getElementById('graph-controls');
+
+    const startReplayBtn = document.getElementById('start-replay-button');
+    const playbackControls = document.getElementById('playback-controls');
+    const pauseBtn = document.getElementById('pause-button');
+
+    const labels = {
+      point: document.getElementById('label-point'),
+      moving_point: document.getElementById('label-moving_point'),
+      line: document.getElementById('label-line'),
+      ruler: document.getElementById('label-ruler'),
+      compass: document.getElementById('label-compass'),
+      protractor: document.getElementById('label-protractor'), 
+      parallel: document.getElementById('label-parallel'),
+      freehand: document.getElementById('label-freehand'),
+      eraser: document.getElementById('label-eraser')
+    };
+
+    window.addEventListener('load', () => {
+        try {
+            initCanvasSize(); saveState(); updateCompassUI(); 
+            initProtractor(); updateProtractorUI(); 
+            addToolListeners(); setupImagePaste(); 
+            drawingArea.addEventListener('wheel', handleWheel, { passive: false });
+            window.addEventListener('resize', resizeCanvas);
+            sliderX.addEventListener('input', handleSliderChange);
+            sliderY.addEventListener('input', handleSliderChange);
+        } catch(e) { alert("起動時エラー: " + e.message); }
+    });
+
+    // --- 平行線ツール関連関数 ---
+    function initParallelCanvasSize() {
+       parallelCanvas.width = canvas.width;
+       parallelCanvas.height = canvas.height;
+       drawParallelTool();
+    }
+    
+    function toggleParallelSet() {
+       if (parallelTool.state === 'free') {
+          parallelTool.state = 'locked';
+          setParallelButton.textContent = "定規を解除";
+          setParallelButton.classList.add('is-active');
+          parallelRotateHandle.style.display = 'none'; // 回転禁止
+          parallelPencil.style.display = 'flex'; // 鉛筆表示
+       } else {
+          parallelTool.state = 'free';
+          setParallelButton.textContent = "セット（定規を固定）";
+          setParallelButton.classList.remove('is-active');
+          parallelRotateHandle.style.display = 'flex'; // 回転許可
+          parallelPencil.style.display = 'none'; // 鉛筆非表示
+       }
+       drawParallelTool();
+    }
+
+    function drawParallelTool() {
+       const ctxP = parallelCanvas.getContext('2d');
+       ctxP.clearRect(0, 0, parallelCanvas.width, parallelCanvas.height);
+       
+       const x = parallelTool.x;
+       const y = parallelTool.y;
+       const w = parallelTool.width;
+       const h = parallelTool.height; // 高さ（長い辺）
+       const ang = parallelTool.angle;
+
+       ctxP.save();
+       ctxP.translate(x, y);
+       ctxP.rotate(ang);
+
+       // --- ガイド定規（ロック時のみ表示） ---
+       if (parallelTool.state === 'locked') {
+          ctxP.fillStyle = "rgba(100, 100, 100, 0.3)";
+          ctxP.strokeStyle = "#555";
+          ctxP.lineWidth = 1;
+          // 左側に配置
+          const guideW = 60;
+          const guideH = h * 1.5;
+          ctxP.fillRect(-guideW - 2, -guideH/2 + h/2, guideW, guideH);
+          ctxP.strokeRect(-guideW - 2, -guideH/2 + h/2, guideW, guideH);
+          
+          // ガイドの目盛り的な装飾
+          ctxP.beginPath();
+          ctxP.strokeStyle = "#333";
+          for(let i=0; i<guideH; i+=20) {
+             ctxP.moveTo(-2, -guideH/2 + h/2 + i);
+             ctxP.lineTo(-15, -guideH/2 + h/2 + i);
+          }
+          ctxP.stroke();
+       }
+
+       // --- 三角定規 ---
+       // 形状：左上が直角 (0,0)、下にh、右にw
+       ctxP.fillStyle = "rgba(0, 123, 255, 0.2)";
+       ctxP.strokeStyle = "#0056b3";
+       ctxP.lineWidth = 2;
+       
+       ctxP.beginPath();
+       ctxP.moveTo(0, 0);       // 直角
+       ctxP.lineTo(0, h);       // 下
+       ctxP.lineTo(w, 0);       // 右
+       ctxP.closePath();
+       ctxP.fill();
+       ctxP.stroke();
+
+       // 目盛り（直角辺）
+       ctxP.beginPath();
+       ctxP.strokeStyle = "rgba(0,0,0,0.5)";
+       ctxP.lineWidth = 1;
+       for(let i=10; i<h; i+=10) {
+          let len = (i%50===0) ? 10 : 5;
+          ctxP.moveTo(0, i); ctxP.lineTo(len, i);
+       }
+       for(let i=10; i<w; i+=10) {
+           let len = (i%50===0) ? 10 : 5;
+           ctxP.moveTo(i, 0); ctxP.lineTo(i, len);
+       }
+       ctxP.stroke();
+
+       // 穴
+       ctxP.beginPath();
+       ctxP.fillStyle = "rgba(255,255,255,0.4)";
+       ctxP.arc(w/3, h/3, 15, 0, Math.PI*2);
+       ctxP.fill(); ctxP.stroke();
+
+       ctxP.restore();
+
+       // --- ハンドル位置更新 ---
+       // 回転ハンドル（右側の頂点付近）
+       const handleX = x + (w + 20) * Math.cos(ang);
+       const handleY = y + (w + 20) * Math.sin(ang);
+       parallelRotateHandle.style.left = handleX + 'px';
+       parallelRotateHandle.style.top = handleY + 'px';
+       
+       // 鉛筆アイコン（斜辺の中点付近）
+       const midX = x + (w/2) * Math.cos(ang) + (h/2) * Math.cos(ang + Math.PI/2);
+       const midY = y + (w/2) * Math.sin(ang) + (h/2) * Math.sin(ang + Math.PI/2);
+       parallelPencil.style.left = midX + 'px';
+       parallelPencil.style.top = midY + 'px';
+       parallelPencil.style.transform = "translate(-50%, -50%)"; // 中心合わせ
+    }
+
+    function startParallelDrag(e) {
+       if (currentTool !== 'parallel') return;
+       e.preventDefault(); e.stopPropagation();
+       const targetId = e.target.id;
+       const pos = getEventPos(e);
+       
+       if (targetId === 'parallelRotateHandle') {
+          parallelTool.dragTarget = 'rotate';
+       } else if (targetId === 'parallelPencil') {
+          parallelTool.dragTarget = 'draw';
+       } else {
+          parallelTool.dragTarget = 'move';
+       }
+       
+       parallelTool.isDragging = true;
+       // ドラッグ開始時のオフセット
+       parallelTool.offsetX = pos.x - parallelTool.x;
+       parallelTool.offsetY = pos.y - parallelTool.y;
+       
+       document.addEventListener('mousemove', dragParallel);
+       document.addEventListener('touchmove', dragParallel, {passive: false});
+       document.addEventListener('mouseup', endParallelDrag);
+       document.addEventListener('touchend', endParallelDrag);
+    }
+    
+    function dragParallel(e) {
+       if (!parallelTool.isDragging) return;
+       e.preventDefault();
+       const pos = getEventPos(e);
+
+       if (parallelTool.dragTarget === 'rotate') {
+          const dx = pos.x - parallelTool.x;
+          const dy = pos.y - parallelTool.y;
+          parallelTool.angle = Math.atan2(dy, dx);
+       } 
+       else if (parallelTool.dragTarget === 'move') {
+          if (parallelTool.state === 'free') {
+             parallelTool.x = pos.x - parallelTool.offsetX;
+             parallelTool.y = pos.y - parallelTool.offsetY;
+          } else {
+             // ★ロック時：ガイド（垂直辺）の方向にしか動かない
+             // ガイドの角度は angle + 90度 (π/2)
+             const guideAngle = parallelTool.angle + Math.PI/2;
+             const ux = Math.cos(guideAngle);
+             const uy = Math.sin(guideAngle);
+             
+             // ターゲット位置（本来行きたい場所）
+             const targetX = pos.x - parallelTool.offsetX;
+             const targetY = pos.y - parallelTool.offsetY;
+             
+             // 投影計算
+             const dx = targetX - parallelTool.x;
+             const dy = targetY - parallelTool.y;
+             const dot = dx * ux + dy * uy;
+             
+             parallelTool.x += dot * ux;
+             parallelTool.y += dot * uy;
+          }
+       }
+       else if (parallelTool.dragTarget === 'draw') {
+          // 鉛筆ドラッグ：斜辺に沿って線を引く
+          // 斜辺の始点 (0, h) -> 終点 (w, 0) ※ローカル
+          // グローバル座標へ変換
+          const p1Local = {x: 0, y: parallelTool.height};
+          const p2Local = {x: parallelTool.width, y: 0};
+          
+          const cos = Math.cos(parallelTool.angle);
+          const sin = Math.sin(parallelTool.angle);
+          
+          const p1 = {
+             x: parallelTool.x + p1Local.x * cos - p1Local.y * sin, // x - h*sin
+             y: parallelTool.y + p1Local.x * sin + p1Local.y * cos  // y + h*cos
+          };
+          const p2 = {
+             x: parallelTool.x + p2Local.x * cos - p2Local.y * sin, // x + w*cos
+             y: parallelTool.y + p2Local.x * sin + p2Local.y * cos  // y + w*sin
+          };
+          
+          // 線を引く
+          drawLine(p1.x, p1.y, p2.x, p2.y, 'line');
+          saveState();
+          // 一回引いたらドラッグ終了扱いにすると連続暴発を防げる
+          parallelTool.isDragging = false; 
+       }
+       
+       drawParallelTool();
+    }
+    
+    function endParallelDrag() {
+       parallelTool.isDragging = false;
+       parallelTool.dragTarget = null;
+       document.removeEventListener('mousemove', dragParallel);
+       document.removeEventListener('touchmove', dragParallel);
+       document.removeEventListener('mouseup', endParallelDrag);
+       document.removeEventListener('touchend', endParallelDrag);
+    }
+    // ----------------------------
+
+    function initProtractor() {
+       const pCtx = protractorCanvas.getContext('2d');
+       const w = protractorCanvas.width; const h = protractorCanvas.height;
+       const cx = w/2, cy = h, r = h - 5;
+       pCtx.clearRect(0,0,w,h);
+       pCtx.beginPath(); pCtx.arc(cx,cy,r,Math.PI,0); pCtx.lineTo(cx,cy); pCtx.closePath();
+       pCtx.fillStyle="rgba(255,255,255,0.6)"; pCtx.fill();
+       pCtx.lineWidth=2; pCtx.strokeStyle="#333"; pCtx.stroke();
+       pCtx.beginPath(); pCtx.arc(cx,cy,3,0,Math.PI*2); pCtx.fillStyle="red"; pCtx.fill();
+       pCtx.textAlign="center"; pCtx.textBaseline="middle"; pCtx.fillStyle="black";
+       for(let i=0; i<=180; i++) {
+          const rad=(Math.PI/180)*(180-i), cos=Math.cos(rad), sin=Math.sin(rad);
+          let len = (i%10===0)?15:(i%5===0?10:5);
+          pCtx.beginPath(); pCtx.moveTo(cx+(r-len)*cos, cy-(r-len)*sin); pCtx.lineTo(cx+r*cos, cy-r*sin); pCtx.stroke();
+          if(i%10===0) {
+             pCtx.font="bold 12px Arial"; pCtx.fillText(i, cx+(r-28)*cos, cy-(r-28)*sin);
+             pCtx.font="10px Arial"; pCtx.fillStyle="#555"; pCtx.fillText(180-i, cx+(r-45)*cos, cy-(r-45)*sin); pCtx.fillStyle="black";
+          }
+       }
+    }
+    function updateProtractorUI() {
+       protractorBody.style.left = (protractor.x - protractor.width/2) + 'px';
+       protractorBody.style.top = (protractor.y - protractor.height) + 'px';
+       protractorBody.style.transform = `rotate(${protractor.angle * 180 / Math.PI}deg)`;
+    }
+    function toggleSection(id, element) {
+      const content = document.getElementById(id);
+      const icon = element.querySelector('span');
+      if (content.style.display === 'none') { content.style.display = 'block'; icon.innerText = '▼'; }
+      else { content.style.display = 'none'; icon.innerText = '▲'; }
+    }
+    
+    function initCanvasSize() {
+      const rect = drawingArea.getBoundingClientRect();
+      canvas.width = rect.width; canvas.height = rect.height;
+      axisCanvas.width = rect.width; axisCanvas.height = rect.height;
+      overlayCanvas.width = rect.width; overlayCanvas.height = rect.height;
+      canvasContent.style.width = rect.width + 'px'; canvasContent.style.height = rect.height + 'px';
+      
+      compass.pivotX = rect.width / 2; compass.pivotY = rect.height / 2;
+      protractor.x = rect.width / 2; protractor.y = rect.height / 2;
+      // 平行線ツール初期位置
+      parallelTool.x = rect.width / 2; parallelTool.y = rect.height / 2;
+
+      initParallelCanvasSize();
+
+      if(document.getElementById('axis-toggle').checked) drawAxis();
+      if (history.length > 0) restoreState(history[history.length - 1]);
+    }
+    function resizeCanvas() {
+       if (history.length > 0) {
+          const rect = drawingArea.getBoundingClientRect();
+          canvas.width = rect.width; canvas.height = rect.height;
+          axisCanvas.width = rect.width; axisCanvas.height = rect.height;
+          overlayCanvas.width = rect.width; overlayCanvas.height = rect.height;
+          canvasContent.style.width = rect.width + 'px'; canvasContent.style.height = rect.height + 'px';
+          restoreState(history[history.length - 1]);
+          drawMovingPoints();
+          initParallelCanvasSize();
+          if(document.getElementById('axis-toggle').checked) drawAxis();
+       } else initCanvasSize();
+    }
+    function handleSliderChange() { view.x = -parseInt(sliderX.value, 10); view.y = -parseInt(sliderY.value, 10); updateTransform(); }
+    function updateTransform() { canvasContent.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`; sliderX.value = -view.x; sliderY.value = -view.y; }
+    function resetView() { view = { scale: 1, x: 0, y: 0 }; updateTransform(); }
+    function handleWheel(e) {
+      if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); }
+      const rect = drawingArea.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left, mouseY = e.clientY - rect.top;
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newScale = view.scale * zoomFactor;
+      if (newScale < 0.5 || newScale > 5.0) return;
+      view.x = mouseX - (mouseX - view.x) * (newScale / view.scale);
+      view.y = mouseY - (mouseY - view.y) * (newScale / view.scale);
+      view.scale = newScale; updateTransform();
+    }
+    function getEventPos(e) {
+      const rect = drawingArea.getBoundingClientRect();
+      let cx, cy;
+      if (e.touches && e.touches.length > 0) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; } 
+      else { cx = e.clientX; cy = e.clientY; }
+      const screenX = cx - rect.left; const screenY = cy - rect.top;
+      return { x: (screenX - view.x) / view.scale, y: (screenY - view.y) / view.scale };
+    }
+
+    function setTool(newTool) {
+      if (currentTool === 'moving_point' && newTool !== 'moving_point') { isMovingPointSet = false; dragMovingPointIndex = -1; updateMovingButtonUI(); }
+      // 平行線ツールからの切り替え時リセット
+      if (currentTool === 'parallel' && newTool !== 'parallel') {
+          parallelTool.state = 'free'; setParallelButton.style.display = 'none'; parallelToolContainer.style.display = 'none';
+          setParallelButton.textContent = "セット（定規を固定）"; setParallelButton.classList.remove('is-active');
+          parallelRotateHandle.style.display = 'flex'; parallelPencil.style.display = 'none';
+      }
+
+      currentTool = newTool; lineStartPoint = null;
+        
+      if (currentTool === 'moving_point') {
+        setMovingButton.style.display = 'block'; movingFillContainer.style.display = 'flex'; 
+        isMovingPointSet = (movingPoints.length > 0);
+        updateMovingButtonUI(); drawMovingPoints();
+      } else { setMovingButton.style.display = 'none'; movingFillContainer.style.display = 'none'; }
+        
+      // コンパス
+      if (currentTool === 'compass') {
+        compassContainer.style.display = 'block'; compassControls.style.display = 'block'; lockButton.style.display = 'block';
+        compass.radius = 100; compass.locked = false; updateLockUI(); updateCompassUI();
+      } else { compassContainer.style.display = 'none'; compassControls.style.display = 'none'; }
+      // 分度器
+      if (currentTool === 'protractor') { protractorContainer.style.display = 'block'; updateProtractorUI(); }
+      else { protractorContainer.style.display = 'none'; }
+      
+      // ★平行線ツール
+      if (currentTool === 'parallel') {
+          parallelToolContainer.style.display = 'block';
+          setParallelButton.style.display = 'block';
+          drawParallelTool();
+      } else {
+          parallelToolContainer.style.display = 'none';
+          setParallelButton.style.display = 'none';
+      }
+        
+      updateCursor();
+    }
+    function toggleMovingSet() { isMovingPointSet = !isMovingPointSet; updateMovingButtonUI(); }
+    function toggleMovingFill() { isMovingFillMode = document.getElementById('moving-fill-toggle').checked; drawMovingPoints(); }
+    function toggleGrid() { if(document.getElementById('grid-toggle').checked) canvasContent.classList.add('grid-background'); else canvasContent.classList.remove('grid-background'); }
+    function toggleAxis() {
+      if (document.getElementById('axis-toggle').checked) { axisCanvas.style.display = 'block'; graphControls.style.display = 'flex'; drawAxis(); }
+      else { axisCanvas.style.display = 'none'; graphControls.style.display = 'none'; }
+    }
+    function parseMathInput(val) {
+      if (typeof val !== 'string') return parseFloat(val) || 0; val = val.trim(); if (val === '') return 0;
+      if (val.includes('/')) { const p=val.split('/'); if(p.length===2){ const n=parseFloat(p[0]), d=parseFloat(p[1]); if(!isNaN(n)&&!isNaN(d)&&d!==0) return n/d; } }
+      return parseFloat(val) || 0;
+    }
+    function updatePolyPreview() {
+      const a = parseMathInput(document.getElementById('poly-a').value), b = parseMathInput(document.getElementById('poly-b').value);
+      const c = parseMathInput(document.getElementById('poly-c').value), d = parseMathInput(document.getElementById('poly-d').value);
+      previewGraph = { type: 'poly', a:a, b:b, c:c, d:d, color: '#999', isPreview: true }; drawAxis();
+    }
+    function addPolyGraph() {
+      const a = parseMathInput(document.getElementById('poly-a').value), b = parseMathInput(document.getElementById('poly-b').value);
+      const c = parseMathInput(document.getElementById('poly-c').value), d = parseMathInput(document.getElementById('poly-d').value);
+      const color = graphColors[activeGraphs.length % graphColors.length];
+      activeGraphs.push({ type: 'poly', a:a, b:b, c:c, d:d, color: color }); previewGraph = null; drawAxis();
+    }
+    function clearGraphs() { activeGraphs = []; previewGraph = null; drawAxis(); }
+    function drawAxis() {
+      const w = axisCanvas.width, h = axisCanvas.height, cx = w/2, cy = h/2, gs = 25; 
+      axisCtx.clearRect(0,0,w,h);
+      axisCtx.strokeStyle = "#e0e0e0"; axisCtx.lineWidth = 1; axisCtx.beginPath();
+      for (let x=cx; x<w; x+=gs) { axisCtx.moveTo(x,0); axisCtx.lineTo(x,h); } for (let x=cx; x>0; x-=gs) { axisCtx.moveTo(x,0); axisCtx.lineTo(x,h); }
+      for (let y=cy; y<h; y+=gs) { axisCtx.moveTo(0,y); axisCtx.lineTo(w,y); } for (let y=cy; y>0; y-=gs) { axisCtx.moveTo(0,y); axisCtx.lineTo(w,y); }
+      axisCtx.stroke();
+      axisCtx.strokeStyle = "#444"; axisCtx.lineWidth = 1.5; axisCtx.fillStyle = "#444"; axisCtx.font = "italic 16px Arial";
+      axisCtx.beginPath(); axisCtx.moveTo(0,cy); axisCtx.lineTo(w,cy); axisCtx.stroke();
+      axisCtx.beginPath(); axisCtx.moveTo(w,cy); axisCtx.lineTo(w-10,cy-5); axisCtx.lineTo(w-10,cy+5); axisCtx.fill(); axisCtx.fillText("x", w-20, cy+20);
+      axisCtx.beginPath(); axisCtx.moveTo(cx,0); axisCtx.lineTo(cx,h); axisCtx.stroke();
+      axisCtx.beginPath(); axisCtx.moveTo(cx,0); axisCtx.lineTo(cx-5,10); axisCtx.lineTo(cx+5,10); axisCtx.fill(); axisCtx.fillText("y", cx-20, 15); axisCtx.fillText("O", cx-15, cy+20);
+      drawGraphs(cx,cy,gs);
+    }
+    function drawGraphs(cx, cy, unit) { activeGraphs.forEach(g => drawSingleGraph(g, cx, cy, unit)); if (previewGraph) drawSingleGraph(previewGraph, cx, cy, unit); }
+    function drawSingleGraph(g, cx, cy, unit) {
+      axisCtx.beginPath(); axisCtx.strokeStyle = g.color; axisCtx.lineWidth = 2;
+      if (g.isPreview) axisCtx.setLineDash([5, 5]); else axisCtx.setLineDash([]); 
+      if (g.type === 'poly') {
+        let first = true;
+        for(let px = 0; px <= axisCanvas.width; px += 2) {
+           const mx = (px - cx) / unit, my = g.a * Math.pow(mx, 3) + g.b * Math.pow(mx, 2) + g.c * mx + g.d, py = cy - my * unit;
+           if(first) { axisCtx.moveTo(px, py); first = false; } else { axisCtx.lineTo(px, py); }
+        }
+      }
+      axisCtx.stroke(); axisCtx.setLineDash([]); 
+    }
+    function updateMovingButtonUI() {
+      if (isMovingPointSet) { setMovingButton.textContent = "動点を解除"; setMovingButton.classList.add('is-active'); }
+      else { setMovingButton.textContent = "セット（移動モードへ）"; setMovingButton.classList.remove('is-active'); }
+    }
+    function setColor(color) { currentColor = color; }
+    function updateCursor() { canvas.style.cursor = (currentTool === 'freehand' || currentTool === 'point' || currentTool === 'moving_point' || currentTool === 'eraser') ? 'crosshair' : 'default'; }
+    function toggleDrawingMode() {
+      const isMode = document.getElementById('mode-toggle').checked;
+      if (isMode) {
+        labels.point.style.display = 'none'; labels.moving_point.style.display = 'none'; labels.line.style.display = 'none'; 
+        labels.freehand.style.display = 'none'; labels.eraser.style.display = 'none'; labels.protractor.style.display = 'none';
+        labels.parallel.style.display = 'none';
+        if (['point','moving_point','line','freehand','eraser', 'protractor', 'parallel'].includes(currentTool)) {
+          document.querySelector('input[value="ruler"]').checked = true; setTool('ruler');
+        }
+      } else {
+        labels.point.style.display = 'flex'; labels.moving_point.style.display = 'flex'; labels.line.style.display = 'flex'; 
+        labels.freehand.style.display = 'flex'; labels.eraser.style.display = 'flex'; labels.protractor.style.display = 'flex';
+        labels.parallel.style.display = 'flex';
+      }
+    }
+    function toggleCompassLock() { compass.locked = !compass.locked; updateLockUI(); }
+    function updateLockUI() {
+      if (compass.locked) { lockButton.classList.add('is-locked'); lockButton.textContent = 'ロック解除'; pencilTip.classList.add('locked'); pencilTip.title = "角度のみ調整（描画なし）"; }
+      else { lockButton.classList.remove('is-locked'); lockButton.textContent = '幅をロック'; pencilTip.classList.remove('locked'); pencilTip.title = "幅と角度を調整"; }
+    }
+    function startPlayback() {
+      if (history.length <= 1) return;
+      startReplayBtn.style.display = 'none'; playbackControls.style.display = 'flex'; overlay.style.display = 'block'; 
+      playbackStep = 0; isPaused = false; pauseBtn.textContent = '⏸ 一時停止';
+      ctx.clearRect(0, 0, canvas.width, canvas.height); loopFunction();
+    }
+    function loopFunction() {
+      if (isPaused) return;
+      if (playbackStep < history.length) { restoreState(history[playbackStep]); playbackStep++; playbackTimer = setTimeout(loopFunction, 800); } 
+      else { playbackTimer = setTimeout(() => { if (isPaused) return; playbackStep = 0; ctx.clearRect(0, 0, canvas.width, canvas.height); playbackTimer = setTimeout(loopFunction, 500); }, 2000); }
+    }
+    function togglePause() {
+      if (isPaused) { isPaused = false; pauseBtn.textContent = '⏸ 一時停止'; loopFunction(); } else { isPaused = true; pauseBtn.textContent = '▶ 再開'; clearTimeout(playbackTimer); }
+    }
+    function stopPlayback() {
+      clearTimeout(playbackTimer); isPaused = false; restoreState(history[history.length - 1]);
+      overlay.style.display = 'none'; playbackControls.style.display = 'none'; startReplayBtn.style.display = 'block';
+    }
+    function startRandomPractice() { startPractice(Math.floor(Math.random() * 4) + 1); }
+    function retryProblem() {
+      if (!currentProblem) return; ctx.clearRect(0, 0, canvas.width, canvas.height);
+      history = []; redoStack = []; lineStartPoint = null;
+      if (currentProblem.type.toString().startsWith('levelup_')) drawLevelUpProblem(currentProblem); else drawProblem(currentProblem);
+      saveState();
+    }
+    function generateCompactTriangle(w, h) {
+      const cx = w / 2, cy = h / 2, radius = 120 + Math.random() * 80;
+      const angleA = Math.random() * Math.PI * 2, Ax = cx + radius * Math.cos(angleA), Ay = cy + radius * Math.sin(angleA);
+      const angleB = angleA + (Math.PI * 2 / 3) + (Math.random() * 0.5 - 0.25), Bx = cx + radius * Math.cos(angleB), By = cy + radius * Math.sin(angleB);
+      const angleC = angleA + (Math.PI * 4 / 3) + (Math.random() * 0.5 - 0.25), Cx = cx + radius * Math.cos(angleC), Cy = cy + radius * Math.sin(angleC);
+      return { A: { x: Ax, y: Ay }, B: { x: Bx, y: By }, C: { x: Cx, y: Cy } };
+    }
+    function startLevelUpBisector() {
+      setupLevelUpProblem(); const tri = generateCompactTriangle(canvas.width, canvas.height);
+      const questions = [ { text: "線分ABの垂直二等分線を作図しなさい", p1: tri.A, p2: tri.B }, { text: "線分BCの垂直二等分線を作図しなさい", p1: tri.B, p2: tri.C }, { text: "線分CAの垂直二等分線を作図しなさい", p1: tri.C, p2: tri.A } ];
+      const selected = questions[Math.floor(Math.random() * 3)];
+      currentProblem = { type: 'levelup_bisector', A: tri.A, B: tri.B, C: tri.C, questionText: selected.text, targetP1: selected.p1, targetP2: selected.p2 };
+      drawLevelUpProblem(currentProblem); saveState();
+    }
+    function startLevelUpAngleBisector() {
+      setupLevelUpProblem(); const tri = generateCompactTriangle(canvas.width, canvas.height);
+      const questions = [ { text: "∠BACの二等分線を作図しなさい", O: tri.A, arm1: tri.B, arm2: tri.C }, { text: "∠ABCの二等分線を作図しなさい", O: tri.B, arm1: tri.A, arm2: tri.C }, { text: "∠BCAの二等分線を作図しなさい", O: tri.C, arm1: tri.A, arm2: tri.B } ];
+      const selected = questions[Math.floor(Math.random() * 3)];
+      currentProblem = { type: 'levelup_angle_bisector', A: tri.A, B: tri.B, C: tri.C, questionText: selected.text, targetO: selected.O, targetArm1: selected.arm1, targetArm2: selected.arm2 };
+      drawLevelUpProblem(currentProblem); saveState();
+    }
+    function startLevelUpPerpOnLine() {
+      setupLevelUpProblem(); const tri = generateCompactTriangle(canvas.width, canvas.height);
+      const sides = [{ p1: tri.A, p2: tri.B }, { p1: tri.B, p2: tri.C }, { p1: tri.C, p2: tri.A }]; const s = sides[Math.floor(Math.random() * 3)];
+      const t = 0.3 + Math.random() * 0.4, P = { x: s.p1.x + (s.p2.x - s.p1.x) * t, y: s.p1.y + (s.p2.y - s.p1.y) * t };
+      const angle = Math.atan2(s.p2.y - s.p1.y, s.p2.x - s.p1.x);
+      currentProblem = { type: 'levelup_perp_online', A: tri.A, B: tri.B, C: tri.C, P: P, lineAngle: angle, questionText: "点Pの垂線を作図しなさい" };
+      drawLevelUpProblem(currentProblem); saveState();
+    }
+    function startLevelUpPerpOffLine() {
+      setupLevelUpProblem(); const tri = generateCompactTriangle(canvas.width, canvas.height);
+      const q = [ { text: "点Aから直線BCに垂線を引きなさい", P: tri.A, s: tri.B, e: tri.C }, { text: "点Bから直線ACに垂線を引きなさい", P: tri.B, s: tri.A, e: tri.C }, { text: "点Cから直線ABに垂線を引きなさい", P: tri.C, s: tri.A, e: tri.B } ];
+      const selected = q[Math.floor(Math.random() * 3)]; const angle = Math.atan2(selected.e.y - selected.s.y, selected.e.x - selected.s.x);
+      currentProblem = { type: 'levelup_perp_offline', A: tri.A, B: tri.B, C: tri.C, P: selected.P, lineP: selected.s, lineAngle: angle, questionText: selected.text };
+      drawLevelUpProblem(currentProblem); saveState();
+    }
+    function setupLevelUpProblem() { ctx.clearRect(0, 0, canvas.width, canvas.height); history = []; redoStack = []; lineStartPoint = null; problemControls.style.display = 'block'; answerButton.style.display = 'block'; retryButton.style.display = 'block'; }
+    function drawLevelUpProblem(p) {
+      const savedColor = currentColor; currentColor = 'black'; ctx.fillStyle = "black"; ctx.font = "20px Arial"; ctx.fillText(p.questionText, 30, 50);
+      drawLine(p.A.x, p.A.y, p.B.x, p.B.y, 'line'); drawLine(p.B.x, p.B.y, p.C.x, p.C.y, 'line'); drawLine(p.C.x, p.C.y, p.A.x, p.A.y, 'line');
+      drawPoint(p.A.x, p.A.y); drawPoint(p.B.x, p.B.y); drawPoint(p.C.x, p.C.y);
+      ctx.fillStyle = "black"; ctx.font = "bold 24px Arial"; ctx.fillText("A", p.A.x-10, p.A.y-15); ctx.fillText("B", p.B.x-25, p.B.y+10); ctx.fillText("C", p.C.x+10, p.C.y+10);
+      if (p.type === 'levelup_perp_online') { drawPoint(p.P.x, p.P.y); ctx.fillText("P", p.P.x+15, p.P.y-15); }
+      currentColor = savedColor;
+    }
+    function startPractice(type) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); history = []; redoStack = []; lineStartPoint = null;
+      const w = canvas.width, h = canvas.height; let problem = { type: type };
+      if (type === 1) { 
+        let A, B, valid=false;
+        while(!valid) { A={x:60+Math.random()*(w-120), y:80+Math.random()*(h-140)}; const ang=Math.random()*Math.PI*2, len=150+Math.random()*200; B={x:A.x+len*Math.cos(ang), y:A.y+len*Math.sin(ang)}; if(B.x>60 && B.x<w-60 && B.y>80 && B.y<h-60) valid=true; }
+        problem.A=A; problem.B=B;
+      } else if (type === 2) { problem.O = {x:w/2+(Math.random()-0.5)*100, y:h/2+(Math.random()-0.5)*100}; problem.baseAngle=Math.random()*Math.PI*2; problem.openAngle=(40+Math.random()*100)*(Math.PI/180); problem.len=Math.max(w,h)*0.7;
+      } else if (type === 3) { 
+        const ang=(Math.random()*30-15)*(Math.PI/180), cx=w/2, cy=h/2+50, len=Math.min(w,h)*0.85;
+        const x1=cx-(len/2)*Math.cos(ang), y1=cy-(len/2)*Math.sin(ang), x2=cx+(len/2)*Math.cos(ang), y2=cy+(len/2)*Math.sin(ang);
+        const t=0.35+Math.random()*0.3; problem.P={x:x1+(x2-x1)*t, y:y1+(y2-y1)*t}; problem.lineStart={x:x1,y:y1}; problem.lineEnd={x:x2,y:y2}; problem.lineAngle=ang;
+      } else if (type === 4) { 
+        const ang=(Math.random()*20-10)*(Math.PI/180), cx=w/2, cy=h*0.7, len=Math.min(w,h)*0.85;
+        const x1=cx-(len/2)*Math.cos(ang), y1=cy-(len/2)*Math.sin(ang), x2=cx+(len/2)*Math.cos(ang), y2=cy+(len/2)*Math.sin(ang);
+        const t=0.4+Math.random()*0.2, bx=x1+(x2-x1)*t, by=y1+(y2-y1)*t; const pDist=120+Math.random()*60, pAng=ang-Math.PI/2;
+        problem.P={x:bx+pDist*Math.cos(pAng), y:by+pDist*Math.sin(pAng)}; problem.lineP={x:bx,y:by}; problem.lineStart={x:x1,y:y1}; problem.lineEnd={x:x2,y:y2}; problem.lineAngle=ang;
+      }
+      currentProblem = problem; drawProblem(currentProblem); saveState(); problemControls.style.display = 'block'; answerButton.style.display = 'block'; retryButton.style.display = 'block'; 
+    }
+    function drawProblem(p) {
+      const savedColor = currentColor; currentColor = 'black'; ctx.fillStyle = "black"; ctx.font = "20px Arial";
+      if (p.type === 1) { ctx.fillText("線分 AB の垂直二等分線を作図しなさい", 30, 50); drawLine(p.A.x, p.A.y, p.B.x, p.B.y, 'segment'); ctx.fillStyle = "black"; ctx.fillText("A", p.A.x-15, p.A.y+25); ctx.fillText("B", p.B.x-15, p.B.y+25); }
+      else if (p.type === 2) { ctx.fillText("∠O の二等分線を作図しなさい", 30, 50); const O=p.O, len=p.len, Xx=O.x+len*Math.cos(p.baseAngle), Xy=O.y+len*Math.sin(p.baseAngle), Yx=O.x+len*Math.cos(p.baseAngle+p.openAngle), Yy=O.y+len*Math.sin(p.baseAngle+p.openAngle); ctx.beginPath(); ctx.lineWidth=2; ctx.strokeStyle="black"; ctx.moveTo(Xx, Xy); ctx.lineTo(O.x, O.y); ctx.lineTo(Yx, Yy); ctx.stroke(); const ld=25, ca=p.baseAngle+p.openAngle/2+Math.PI; ctx.fillStyle="black"; ctx.fillText("O", O.x+ld*Math.cos(ca)-6, O.y+ld*Math.sin(ca)+6); }
+      else if (p.type === 3 || p.type === 4) { ctx.fillText("点 P を通る垂線を作図しなさい", 30, 50); drawLine(p.lineStart.x, p.lineStart.y, p.lineEnd.x, p.lineEnd.y, 'segment'); drawPoint(p.P.x, p.P.y); ctx.fillStyle = "black"; ctx.fillText("X", p.lineStart.x+5, p.lineStart.y-10); ctx.fillText("Y", p.lineEnd.x-15, p.lineEnd.y-10); ctx.fillText("P", p.P.x-5, p.type===3?p.P.y+25:p.P.y-15); }
+      currentColor = savedColor;
+    }
+    function showAnswer() {
+      if (!currentProblem) return; saveState(); const savedColor = currentColor; const stepColors = ['black', '#007bff', '#dc3545']; let stepCount = 0;
+      function drawDoubleSmartArc(center, r, a1, a2) { const color = stepColors[stepCount % 3], num = stepCount + 1; drawPoint(center.x, center.y, color, 6); ctx.fillStyle = color; ctx.font = "bold 24px Arial"; ctx.fillText(num, center.x - 15, center.y - 15); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(center.x, center.y, r, a1 - 0.4, a1 + 0.4); ctx.stroke(); ctx.beginPath(); ctx.arc(center.x, center.y, r, a2 - 0.4, a2 + 0.4); ctx.stroke(); stepCount++; }
+      function drawSmartArc(center, r, ta) { const color = stepColors[stepCount % 3], num = stepCount + 1; drawPoint(center.x, center.y, color, 6); ctx.fillStyle = color; ctx.font = "bold 24px Arial"; ctx.fillText(num, center.x - 15, center.y - 15); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(center.x, center.y, r, ta - 0.4, ta + 0.4); ctx.stroke(); stepCount++; }
+      const tasks = [], originalDouble = drawDoubleSmartArc, originalSingle = drawSmartArc;
+      drawDoubleSmartArc = (c, r, a1, a2) => tasks.push(() => originalDouble(c, r, a1, a2)); drawSmartArc = (c, r, a) => tasks.push(() => originalSingle(c, r, a));
+      if (currentProblem.type === 1 || currentProblem.type === 'levelup_bisector') {
+          const A = (currentProblem.type === 'levelup_bisector') ? currentProblem.targetP1 : currentProblem.A, B = (currentProblem.type === 'levelup_bisector') ? currentProblem.targetP2 : currentProblem.B;
+          const dist = Math.hypot(B.x - A.x, B.y - A.y), r = dist * 0.7, angleAB = Math.atan2(B.y - A.y, B.x - A.x), delta = Math.acos((dist/2)/r);
+          drawDoubleSmartArc(A, r, angleAB + delta, angleAB - delta); drawDoubleSmartArc(B, r, angleAB + Math.PI - delta, angleAB + Math.PI + delta);
+          tasks.push(() => { const midX=(A.x+B.x)/2, midY=(A.y+B.y)/2, perpAngle=angleAB+Math.PI/2, len=1000; ctx.strokeStyle="#dc3545"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(midX-len*Math.cos(perpAngle), midY-len*Math.sin(perpAngle)); ctx.lineTo(midX+len*Math.cos(perpAngle), midY+len*Math.sin(perpAngle)); ctx.stroke(); });
+      } else if (currentProblem.type === 2 || currentProblem.type === 'levelup_angle_bisector') {
+          let O, P1, P2;
+          if(currentProblem.type===2) { O=currentProblem.O; P1={x:O.x+80*Math.cos(currentProblem.baseAngle), y:O.y+80*Math.sin(currentProblem.baseAngle)}; P2={x:O.x+80*Math.cos(currentProblem.baseAngle+currentProblem.openAngle), y:O.y+80*Math.sin(currentProblem.baseAngle+currentProblem.openAngle)}; }
+          else { O=currentProblem.targetO; P1=currentProblem.targetArm1; P2=currentProblem.targetArm2; }
+          const r1=80, a1=Math.atan2(P1.y-O.y, P1.x-O.x), a2=Math.atan2(P2.y-O.y, P2.x-O.x); drawDoubleSmartArc(O, r1, a1, a2);
+          const c1={x:O.x+r1*Math.cos(a1), y:O.y+r1*Math.sin(a1)}, c2={x:O.x+r1*Math.cos(a2), y:O.y+r1*Math.sin(a2)}, bisectorAngle = Math.atan2(Math.sin(a1)+Math.sin(a2), Math.cos(a1)+Math.cos(a2));
+          const r2=80, h_tri=Math.sqrt(r2*r2-(Math.hypot(c2.x-c1.x,c2.y-c1.y)/2)**2), tx=(c1.x+c2.x)/2+h_tri*Math.cos(bisectorAngle), ty=(c1.y+c2.y)/2+h_tri*Math.sin(bisectorAngle);
+          drawSmartArc(c1, r2, Math.atan2(ty-c1.y, tx-c1.x)); drawSmartArc(c2, r2, Math.atan2(ty-c2.y, tx-c2.x));
+          tasks.push(() => { ctx.strokeStyle="#dc3545"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(O.x,O.y); ctx.lineTo(O.x+1000*Math.cos(bisectorAngle),O.y+1000*Math.sin(bisectorAngle)); ctx.stroke(); });
+      } else if (currentProblem.type === 'levelup_perp_online' || currentProblem.type === 3) {
+          const P = currentProblem.P, ang = currentProblem.lineAngle, r1=60, i1={x:P.x+r1*Math.cos(ang), y:P.y+r1*Math.sin(ang)}, i2={x:P.x-r1*Math.cos(ang), y:P.y-r1*Math.sin(ang)};
+          drawDoubleSmartArc(P, r1, ang, ang+Math.PI); const r2=80, pAng=ang+Math.PI/2, h=Math.sqrt(r2*r2-r1*r1), c={x:P.x+h*Math.cos(pAng), y:P.y+h*Math.sin(pAng)};
+          drawSmartArc(i1, r2, Math.atan2(c.y-i1.y, c.x-i1.x)); drawSmartArc(i2, r2, Math.atan2(c.y-i2.y, c.x-i2.x));
+          tasks.push(()=>{ ctx.strokeStyle="#dc3545"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(P.x-1000*Math.cos(pAng), P.y-1000*Math.sin(pAng)); ctx.lineTo(P.x+1000*Math.cos(pAng), P.y+1000*Math.sin(pAng)); ctx.stroke(); });
+      } else if (currentProblem.type === 'levelup_perp_offline' || currentProblem.type === 4) {
+          const P = currentProblem.P, baseP = currentProblem.lineP, ang = currentProblem.lineAngle, dist = Math.hypot(P.x-baseP.x, P.y-baseP.y), R1 = dist * 1.3;
+          const vx=baseP.x-P.x, vy=baseP.y-P.y, ux=Math.cos(ang), uy=Math.sin(ang), B=2*(vx*ux+vy*uy), C=(vx*vx+vy*vy)-R1*R1, det=B*B-4*C, t1=(-B+Math.sqrt(det))/2, t2=(-B-Math.sqrt(det))/2;
+          const I1={x:baseP.x+t1*ux, y:baseP.y+t1*uy}, I2={x:baseP.x+t2*ux, y:baseP.y+t2*uy}; drawDoubleSmartArc(P, R1, Math.atan2(I1.y-P.y,I1.x-P.x), Math.atan2(I2.y-P.y,I2.x-P.x));
+          const R2=R1*1.1, mx=(I1.x+I2.x)/2, my=(I1.y+I2.y)/2, distM=Math.sqrt(R2*R2-(Math.hypot(I1.x-I2.x,I1.y-I2.y)/2)**2);
+          let nAng=ang+Math.PI/2; if(Math.hypot(mx+Math.cos(nAng)-P.x, my+Math.sin(nAng)-P.y) < Math.hypot(mx-Math.cos(nAng)-P.x, my-Math.sin(nAng)-P.y)) nAng-=Math.PI;
+          const TX={x:mx+distM*Math.cos(nAng), y:my+distM*Math.sin(nAng)}; drawSmartArc(I1, R2, Math.atan2(TX.y-I1.y,TX.x-I1.x)); drawSmartArc(I2, R2, Math.atan2(TX.y-I2.y,TX.x-I2.x));
+          tasks.push(()=>{ ctx.strokeStyle="#dc3545"; ctx.lineWidth=3; ctx.beginPath(); const dx=TX.x-P.x, dy=TX.y-P.y, l=Math.hypot(dx,dy); ctx.moveTo(P.x-(dx/l)*2000, P.y-(dy/l)*2000); ctx.lineTo(P.x+(dx/l)*2000, P.y+(dy/l)*2000); ctx.stroke(); });
+      }
+      overlay.style.display = 'block'; let i = 0;
+      function run() { if (i < tasks.length) { tasks[i](); i++; setTimeout(run, 800); } else { overlay.style.display = 'none'; saveState(); currentColor = savedColor; } }
+      run();
+    }
+    imageInput.addEventListener('change', function(e) { const file = e.target.files[0]; if (file) { handleImageFile(file); imageInput.value = ''; } });
+    function setupImagePaste() { window.addEventListener('paste', function(e) { const items = (e.clipboardData || e.originalEvent.clipboardData).items; for (let i = 0; i < items.length; i++) { if (items[i].type.indexOf('image') !== -1) { handleImageFile(items[i].getAsFile()); e.preventDefault(); break; } } }); }
+    function handleImageFile(file) { const reader = new FileReader(); reader.onload = function(event) { const img = new Image(); img.onload = function() { let dw = img.width, dh = img.height; const mw = canvas.width * 0.8, mh = canvas.height * 0.8; if (dw > mw || dh > mh) { const r = Math.min(mw / dw, mh / dh); dw *= r; dh *= r; } ctx.drawImage(img, (canvas.width - dw)/2, (canvas.height - dh)/2, dw, dh); saveState(); }; img.src = event.target.result; }; reader.readAsDataURL(file); }
+    function saveState() { redoStack = []; history.push(canvas.toDataURL()); if (history.length > 30) history.shift(); }
+    function restoreState(dataURL) { const img = new Image(); img.onload = function() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); }; img.src = dataURL; }
+    function undoAction() { if (currentTool === 'moving_point') { if (isMovingPointSet) { toggleMovingSet(); return; } if (movingPoints.length > 0) { movingPoints.pop(); drawMovingPoints(); return; } } if (history.length > 1) { redoStack.push(history.pop()); restoreState(history[history.length - 1]); if (currentTool === 'moving_point') { movingPoints = []; } lineStartPoint = null; } }
+    function redoAction() { if (redoStack.length > 0) { const next = redoStack.pop(); history.push(next); restoreState(next); lineStartPoint = null; } }
+    function resetCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); history = []; redoStack = []; saveState(); lineStartPoint = null; currentProblem = null; problemControls.style.display = 'none'; movingPoints = []; overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); resetView(); }
+    function updateCompassUI() { compassPivot.style.left = compass.pivotX + 'px'; compassPivot.style.top = compass.pivotY + 'px'; compassArm.style.left = compass.pivotX + 'px'; compassArm.style.top = compass.pivotY + 'px'; compassArm.style.width = compass.radius + 'px'; compassArm.style.transform = `rotate(${compass.angle * 180 / Math.PI}deg)`; const pencilOffset = 40, pencilX = compass.pivotX + (compass.radius + pencilOffset) * Math.cos(compass.angle), pencilY = compass.pivotY + (compass.radius + pencilOffset) * Math.sin(compass.angle); pencilDrawHandle.style.left = pencilX + 'px'; pencilDrawHandle.style.top = pencilY + 'px'; pencilDrawHandle.style.transform = `translate(-50%, -50%)`; }
+    function startCompassDrag(e) { if (currentTool !== 'compass') return; e.preventDefault(); e.stopPropagation(); const targetId = e.currentTarget.id; if (targetId === 'compassPivot') compass.dragTarget = 'pivot'; else if (targetId === 'pencilTip') compass.dragTarget = 'radius'; else if (targetId === 'pencilDrawHandle') { compass.dragTarget = 'draw'; compass.centerDrawn = false; ctx.beginPath(); ctx.strokeStyle = currentColor; ctx.lineWidth = (currentColor === 'white') ? 20 : 2; ctx.moveTo(compass.pivotX + compass.radius * Math.cos(compass.angle), compass.pivotY + compass.radius * Math.sin(compass.angle)); } compass.isDragging = true; document.addEventListener('mousemove', dragCompass); document.addEventListener('touchmove', dragCompass, {passive: false}); document.addEventListener('mouseup', endCompassDrag); document.addEventListener('touchend', endCompassDrag); }
+    function dragCompass(e) { if (!compass.isDragging) return; e.preventDefault(); const pos = getEventPos(e); if (compass.dragTarget === 'pivot') { compass.pivotX = pos.x; compass.pivotY = pos.y; } else if (compass.dragTarget === 'radius') { const dx = pos.x - compass.pivotX, dy = pos.y - compass.pivotY; if (compass.locked) { compass.angle = Math.atan2(dy, dx); } else { const newRadius = Math.sqrt(dx*dx + dy*dy); if (newRadius > 20) { compass.radius = newRadius; compass.angle = Math.atan2(dy, dx); } } } else if (compass.dragTarget === 'draw') { if (!compass.centerDrawn) { drawPoint(compass.pivotX, compass.pivotY, 'red'); compass.centerDrawn = true; ctx.beginPath(); ctx.strokeStyle = currentColor; ctx.lineWidth = (currentColor === 'white') ? 20 : 2; } const dx = pos.x - compass.pivotX, dy = pos.y - compass.pivotY; const newAngle = Math.atan2(dy, dx); let diff = newAngle - compass.angle; while (diff <= -Math.PI) diff += 2 * Math.PI; while (diff > Math.PI) diff -= 2 * Math.PI; ctx.beginPath(); ctx.strokeStyle = currentColor; ctx.lineWidth = (currentColor === 'white') ? 20 : 2; ctx.arc(compass.pivotX, compass.pivotY, compass.radius, compass.angle, newAngle, diff < 0); ctx.stroke(); compass.angle = newAngle; } updateCompassUI(); }
+    function endCompassDrag(e) { if (compass.isDragging) { if (compass.dragTarget === 'draw') { saveState(); compass.locked = true; updateLockUI(); } compass.isDragging = false; compass.dragTarget = null; document.removeEventListener('mousemove', dragCompass); document.removeEventListener('touchmove', dragCompass); document.removeEventListener('mouseup', endCompassDrag); document.removeEventListener('touchend', endCompassDrag); } }
+    function startProtractorDrag(e) { if (currentTool !== 'protractor') return; e.preventDefault(); e.stopPropagation(); const targetId = e.target.id; if (targetId === 'protractorRotateHandle') protractor.dragTarget = 'rotate'; else protractor.dragTarget = 'move'; protractor.isDragging = true; document.addEventListener('mousemove', dragProtractor); document.addEventListener('touchmove', dragProtractor, {passive: false}); document.addEventListener('mouseup', endProtractorDrag); document.addEventListener('touchend', endProtractorDrag); }
+    function dragProtractor(e) { if (!protractor.isDragging) return; e.preventDefault(); const pos = getEventPos(e); if (protractor.dragTarget === 'move') { protractor.x = pos.x; protractor.y = pos.y; } else if (protractor.dragTarget === 'rotate') { const dx = pos.x - protractor.x; const dy = pos.y - protractor.y; protractor.angle = Math.atan2(dy, dx); } updateProtractorUI(); }
+    function endProtractorDrag() { if (protractor.isDragging) { protractor.isDragging = false; protractor.dragTarget = null; document.removeEventListener('mousemove', dragProtractor); document.removeEventListener('touchmove', dragProtractor); document.removeEventListener('mouseup', endProtractorDrag); document.removeEventListener('touchend', endProtractorDrag); } }
+    function addToolListeners() {
+      compassPivot.addEventListener('mousedown', startCompassDrag); compassPivot.addEventListener('touchstart', startCompassDrag, {passive: false});
+      pencilTip.addEventListener('mousedown', startCompassDrag); pencilTip.addEventListener('touchstart', startCompassDrag, {passive: false});
+      pencilDrawHandle.addEventListener('mousedown', startCompassDrag); pencilDrawHandle.addEventListener('touchstart', startCompassDrag, {passive: false});
+      protractorBody.addEventListener('mousedown', startProtractorDrag); protractorBody.addEventListener('touchstart', startProtractorDrag, {passive: false});
+      
+      // 平行線ツールのリスナー追加
+      parallelRotateHandle.addEventListener('mousedown', startParallelDrag); parallelRotateHandle.addEventListener('touchstart', startParallelDrag, {passive: false});
+      parallelPencil.addEventListener('mousedown', startParallelDrag); parallelPencil.addEventListener('touchstart', startParallelDrag, {passive: false});
+      parallelCanvas.addEventListener('mousedown', startParallelDrag); parallelCanvas.addEventListener('touchstart', startParallelDrag, {passive: false});
+      
+      drawingArea.addEventListener('mousedown', handleStart); drawingArea.addEventListener('touchstart', handleStart, {passive: false});
+      window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove, {passive: false});
+      window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
+    }
+    function handleStart(e) {
+      if (e.target.classList.contains('view-slider')) return;
+      if (currentTool === 'protractor') return;
+      if (currentTool === 'parallel') return; // キャンバスでのドラッグ処理に任せる
+      if (e.touches && e.touches.length === 2) { isPanning = true; const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY; initialPinchDist = Math.hypot(dx, dy); initialScale = view.scale; const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2; startPan = { x: cx - view.x, y: cy - view.y }; return; }
+      if (currentTool === 'compass') return;
+      if (!drawingArea.contains(e.target)) return;
+      e.preventDefault(); const pos = getEventPos(e);
+      if (currentTool === 'moving_point') { if (!isMovingPointSet) { movingPoints.push({x: pos.x, y: pos.y}); drawMovingPoints(); } else { for(let i=0; i<movingPoints.length; i++) { const dx = pos.x - movingPoints[i].x, dy = pos.y - movingPoints[i].y; if (dx*dx + dy*dy < 400) { dragMovingPointIndex = i; break; } } } }
+      else if (currentTool === 'point') { drawPoint(pos.x, pos.y); saveState(); }
+      else if (currentTool === 'freehand' || currentTool === 'eraser') { isDrawing = true; ctx.beginPath(); ctx.moveTo(pos.x, pos.y); ctx.strokeStyle = (currentTool === 'eraser') ? 'white' : currentColor; ctx.lineWidth = (currentTool === 'eraser') ? 20 : 2; ctx.lineCap = 'round'; }
+      else if (currentTool === 'line' || currentTool === 'ruler') { if (!lineStartPoint) { lineStartPoint = pos; drawPoint(pos.x, pos.y, 'red'); } else { const type = (currentTool === 'ruler') ? 'line' : 'segment'; drawLine(lineStartPoint.x, lineStartPoint.y, pos.x, pos.y, type); lineStartPoint = null; saveState(); } }
+    }
+    function drawMovingPoints() { overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); _drawMovingOverlay(); }
+    function _drawMovingOverlay() {
+       if (movingPoints.length === 0) return; overlayCtx.lineWidth = 2; overlayCtx.strokeStyle = "black";
+       if (movingPoints.length > 1) { overlayCtx.beginPath(); overlayCtx.moveTo(movingPoints[0].x, movingPoints[0].y); for(let i=1; i<movingPoints.length; i++) { overlayCtx.lineTo(movingPoints[i].x, movingPoints[i].y); } if (movingPoints.length >= 3) { overlayCtx.closePath(); if (isMovingFillMode) { overlayCtx.fillStyle = "rgba(220, 53, 69, 0.2)"; overlayCtx.fill(); } } overlayCtx.stroke(); }
+       for(let i=0; i<movingPoints.length; i++) { drawSingleMovingPoint(movingPoints[i].x, movingPoints[i].y); }
+    }
+    function drawSingleMovingPoint(x, y) { overlayCtx.fillStyle = "#dc3545"; overlayCtx.beginPath(); overlayCtx.arc(x, y, 3, 0, Math.PI * 2); overlayCtx.fill(); overlayCtx.strokeStyle = "black"; overlayCtx.lineWidth = 1; overlayCtx.beginPath(); overlayCtx.arc(x, y, 6, 0, Math.PI * 2); overlayCtx.stroke(); }
+    function handleMove(e) {
+      if (e.touches && e.touches.length === 2 && isPanning) { e.preventDefault(); const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY; const currentDist = Math.hypot(dx, dy); if (initialPinchDist > 0) { const newScale = initialScale * (currentDist / initialPinchDist); if (newScale >= 0.5 && newScale <= 5.0) { view.scale = newScale; } } const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2, cy = (e.touches[0].clientY + e.touches[1].clientY) / 2; view.x = cx - startPan.x; view.y = cy - startPan.y; updateTransform(); return; }
+      if (currentTool === 'compass') return; if (currentTool === 'protractor') return; if (currentTool === 'parallel') return;
+      if (currentTool === 'moving_point' && dragMovingPointIndex !== -1) { e.preventDefault(); const pos = getEventPos(e); movingPoints[dragMovingPointIndex] = {x: pos.x, y: pos.y}; drawMovingPoints(); return; }
+      if (!isDrawing && !lineStartPoint) return; if (e.touches && e.touches.length > 1) return;
+      e.preventDefault(); const pos = getEventPos(e); if ((currentTool === 'freehand' || currentTool === 'eraser') && isDrawing) { ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
+    }
+    function handleEnd(e) { isPanning = false; dragMovingPointIndex = -1; if ((currentTool === 'freehand' || currentTool === 'eraser') && isDrawing) { isDrawing = false; saveState(); } }
+    function drawPoint(x, y, color = currentColor, radius = 3) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); }
+    function drawLine(x1, y1, x2, y2, type) { ctx.strokeStyle = currentColor; ctx.lineWidth = 2; ctx.beginPath(); if (type === 'segment') { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); } else { const ep = getExtendedLine(x1, y1, x2, y2); ctx.moveTo(ep.x1, ep.y1); ctx.lineTo(ep.x2, ep.y2); } ctx.stroke(); drawPoint(x1, y1); drawPoint(x2, y2); }
+    function getExtendedLine(x1, y1, x2, y2) {
+      const w = canvas.width; const h = canvas.height;
+      if (x1 === x2) return { x1: x1, y1: 0, x2: x1, y2: h };
+      if (y1 === y2) return { x1: 0, y1: y1, x2: w, y2: y1 };
+      const m = (y2 - y1) / (x2 - x1); const b = y1 - m * x1;
+      const pts = []; let y0 = b; if (y0 >= 0 && y0 <= h) pts.push({x:0, y:y0}); let yw = m * w + b; if (yw >= 0 && yw <= h) pts.push({x:w, y:yw}); let x0 = -b / m; if (x0 >= 0 && x0 <= w) pts.push({x:x0, y:0}); let xh = (h - b) / m; if (xh >= 0 && xh <= w) pts.push({x:xh, y:h});
+      if (pts.length >= 2) return { x1: pts[0].x, y1: pts[0].y, x2: pts[pts.length-1].x, y2: pts[pts.length-1].y };
+      return { x1: x1, y1: y1, x2: x2, y2: y2 }; 
+    }
+    
+    
+    
+    /* --- JS END --- */
+  </script>
+
+  <footer style="padding: 5px; text-align:center; border-top:1px solid #eee; background-color:#fafafa; font-size: 12px; flex-shrink: 0;">
      <a href="https://sites.google.com/view/k-system-lab/ホーム" target="_blank" style="color:#007bff; text-decoration:none; font-weight:bold;">
        🏠 K-System Lab (ホーム) に戻る
      </a>
